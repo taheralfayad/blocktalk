@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
 
@@ -42,8 +44,10 @@ class _BlockState extends State<Block> {
     return
      InkWell(
       onTap: () {
-        // Handle block tap
-        print("Block tapped: ${widget.blockId}");
+        context.goNamed(
+          'entry',
+          pathParameters: {'blockId': widget.blockId},
+        );
       },
       child: Container(
         padding: const EdgeInsets.only(

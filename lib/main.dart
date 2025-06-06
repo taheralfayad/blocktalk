@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-
-import 'design-system/colors.dart';
-import 'design-system/text.dart';
-
-import 'components/navbar.dart';
-import 'components/block.dart';
 
 import 'pages/add_entry.dart';
 import 'pages/map.dart';
 import 'pages/feed.dart';
+import 'pages/entry.dart';
 
 void main() {
   runApp(const BlockTalkApp());
@@ -30,10 +24,18 @@ final _router = GoRouter(
       pageBuilder: (context, state) => NoTransitionPage(child: MapPage()),
     ),
     GoRoute(
-      name: 'entry',
-      path: '/entry',
+      name: 'add_entry',
+      path: '/add_entry',
       pageBuilder: (context, state) => NoTransitionPage(child: AddEntryPage()),
     ),
+    GoRoute(
+      name: 'entry',
+      path: '/entry/:blockId',
+      pageBuilder: (context, state) {
+         final String? blockId = state.pathParameters['blockId'];
+         return NoTransitionPage(child: EntryPage(blockId: blockId));
+      }
+    )
   ],
 );
 

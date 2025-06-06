@@ -28,7 +28,7 @@ class _NavbarState extends State<Navbar> {
         context.go('/map'); // Navigate to Map
         break;
       case 2:
-        context.go('/entry'); // Navigate to Add Entry
+        context.go('/add_entry'); // Navigate to Add Entry
         break;
     }
   }
