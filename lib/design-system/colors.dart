@@ -5,8 +5,8 @@ class AppColors {
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     colors: [
-      Color(0xFFF8FAFB), // Light Steel Blue
-      Color(0xFFE8F4F8), // Light Blue
+      Color.fromARGB(255, 255, 255, 255), // Light Steel Blue
+      Color.fromARGB(255, 255, 255, 255), // Light Blue
     ],
   );
   static const Color blockColor = Color(0xFFE1E8ED);

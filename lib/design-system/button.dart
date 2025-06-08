@@ -14,7 +14,7 @@ class BlockTalkButton extends StatelessWidget {
     required this.text,
     required this.type,
     required this.onPressed,
-    required this.buttonColor,
+    this.buttonColor = AppColors.primaryButtonColor,
   });
 
   @override
