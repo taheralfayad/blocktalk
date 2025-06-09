@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import '../design-system/text.dart';
 
 
-class Comment extends StatelessWidget {
+class Comment extends StatefulWidget {
   final String text;
   final String author;
   final String classification;
   final String avatarUrl;
+  final List<Comment> replies;
 
   const Comment({
     super.key,
@@ -15,8 +16,16 @@ class Comment extends StatelessWidget {
     required this.author,
     required this.classification,
     this.avatarUrl = 'assets/avatar.jpg',
+    this.replies = const [],
   });
 
+  @override
+  State<Comment> createState() => _CommentState();
+}
+
+
+class _CommentState extends State<Comment> {
+  bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,11 +50,11 @@ class Comment extends StatelessWidget {
                     ),
                     child: CircleAvatar(
                       radius: 20.0,
-                      backgroundImage: AssetImage(avatarUrl),
+                      backgroundImage: AssetImage(widget.avatarUrl),
                     )
                   ),
                   BlockTalkText(
-                    text: author,
+                    text: widget.author,
                     fontWeight: FontWeight.bold,
                   ),
                 ],
@@ -57,7 +66,7 @@ class Comment extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16.0),
                 ),
                 child: BlockTalkText(
-                  text: classification,
+                  text: widget.classification,
                   fontSize: 14.0,
                   fontWeight: FontWeight.w500,
                 ),
@@ -70,10 +79,52 @@ class Comment extends StatelessWidget {
               bottom: 8.0,
             ),
             child: BlockTalkText(
-              text: text,
+              text: widget.text,
               fontSize: 16.0,
             ),
           ),
+          if (widget.classification == 'Conversation') 
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                TextButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.reply, size: 16.0),
+                  label: const Text('Reply'),
+                ),
+                const SizedBox(width: 8.0),
+                TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                      _isExpanded = !_isExpanded;
+                    });
+                  },
+                  icon: const Icon(Icons.chat, size: 16.0),
+                  label: Text('Replies (${widget.replies.length})'),
+                ),
+              ]
+            ),
+          if (widget.replies.isNotEmpty && _isExpanded) 
+            ...widget.replies.map(
+              (reply) => Padding(
+                padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                child:
+                 Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Comment(
+                        text: reply.text,
+                        author: reply.author,
+                        classification: reply.classification,
+                        avatarUrl: reply.avatarUrl,
+                        replies: reply.replies,
+                      )
+                    ),
+                  ],
+                  )
+              )
+            ),
         ]
       )
     );

@@ -42,6 +42,10 @@ class _EntryPageState extends State<EntryPage> {
           children: [
             Expanded(
               child: SafeArea(
+                top: true,
+                bottom: false,
+                left: false,
+                right: false,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -80,6 +84,26 @@ class _EntryPageState extends State<EntryPage> {
                           itemCount: 10,
                           itemBuilder: (context, index) {
                             if (index % 2 == 0) {
+                              if (index == 2) {
+                                return Comment(
+                                  text: "This is a comment to try out replies",
+                                  author: "@taher",
+                                  classification: "Conversation",
+                                  replies: [
+                                    Comment(
+                                      text: "This is a reply to the comment above",
+                                      author: "@dgwn",
+                                      classification: "Conversation",
+                                      replies: [],
+                                    ),
+                                    Comment(
+                                      text: "This is another reply to the comment above",
+                                      author: "@taher",
+                                      classification: "Conversation",
+                                    )
+                                  ],
+                                );
+                              }
                               return Comment(
                                 text: "This is a sample comment text for index $index. It can be a bit longer to simulate real comments.",
                                 author: "@dgwn",
