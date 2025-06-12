@@ -23,6 +23,8 @@ class _EntryPageState extends State<EntryPage> {
     Vestibulum sed dolor felis. Praesent nec tellus blandit, semper sem egestas, scelerisque tortor. Suspendisse porta tortor blandit dui efficitur, vel feugiat sapien posuere. Phasellus dictum felis nec libero ultrices, vitae scelerisque justo placerat. Etiam sed sapien convallis nunc viverra egestas. In molestie molestie mattis. Cras molestie nunc eget erat hendrerit, id ornare odio porttitor. Maecenas feugiat, diam non pulvinar rutrum, magna dolor congue arcu, a pharetra ligula orci vitae neque. Nunc non dapibus purus, eget fringilla elit. Aenean a faucibus nisl, id placerat dui. Etiam laoreet auctor massa, et bibendum risus tristique et. Etiam elementum dignissim mi et volutpat. Phasellus sit amet ipsum lobortis, vulputate libero vel, aliquet nulla.
     Cras in leo ultricies, dapibus ligula vel, semper nisl. Praesent eu iaculis lorem. Nullam non est eget velit vehicula maximus. Nam ac nunc leo. Nullam molestie neque nec enim fermentum, non bibendum ligula ultrices. Praesent fringilla accumsan ornare. Aenean orci eros, cursus pulvinar nunc sit amet, consectetur finibus velit. Suspendisse faucibus, leo ac pellentesque aliquet, mauris lacus porttitor turpis, id accumsan dui nisl eget nulla. Morbi ullamcorper fringilla neque, a dapibus elit aliquet vel. Nulla lacus lorem, rhoncus non tempus et, volutpat at ante. Pellentesque nisl metus, accumsan ac suscipit sed, fermentum et velit. Mauris non dolor ex. Curabitur scelerisque fringilla risus in ultricies.
   """;
+  int _upvotes = 0;
+  int _downvotes = 0;
 
   void initState() {
     print("EntryPage initialized with blockId: ${widget.blockId}");
@@ -71,7 +73,25 @@ class _EntryPageState extends State<EntryPage> {
                         text: loremIpsum,
                         fontSize: 16.0,
                       ),
-                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          TextButton.icon(
+                            label: Text("Upvote ($_upvotes)"),
+                            icon: const Icon(Icons.arrow_upward_rounded),
+                            onPressed: () {
+                              // Handle upvote action
+                            },
+                          ),
+                          TextButton.icon(
+                            label: Text("Downvote ($_downvotes)"),
+                            icon: Icon(Icons.arrow_downward_rounded),
+                            onPressed: () {
+                              // Handle downvote action
+                            },
+                          ),
+                        ],
+                      ),
                       BlockTalkBanner(
                         text: "Conversation"
                       ),
@@ -94,7 +114,21 @@ class _EntryPageState extends State<EntryPage> {
                                       text: "This is a reply to the comment above",
                                       author: "@dgwn",
                                       classification: "Conversation",
-                                      replies: [],
+                                      replies: [
+                                        Comment(
+                                          text: "This is a nested reply to the reply above",
+                                          author: "@taher",
+                                          classification: "Conversation",
+                                          replies: [
+                                            Comment(
+                                              text: "This is a nested reply to the nested reply above",
+                                              author: "@dgwn",
+                                              classification: "Conversation",
+                                              replies: []
+                                            )
+                                          ]
+                                        )
+                                      ],
                                     ),
                                     Comment(
                                       text: "This is another reply to the comment above",

@@ -14,19 +14,19 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-
   @override
   Widget build(BuildContext context) {
-    return Container (
-      decoration: const BoxDecoration(
-        gradient: AppColors.backgroundColor,
-      ),
+    return Container(
+      decoration: const BoxDecoration(gradient: AppColors.backgroundColor),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
+        body: SafeArea(
+          top: true,
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
                   itemCount: 10,
                   itemBuilder: (context, index) {
                     return Block(
@@ -35,18 +35,19 @@ class _FeedPageState extends State<FeedPage> {
                       name: "User $index",
                       username: "user_$index",
                       text: "This is some sample text for block $index.",
-                      likes: 50871,
-                      comments: 1571,
-                      shares: 1000,
+                      upvotes: 50871,
+                      downvotes: 1571,
+                      conversations: 1000,
                       imageUrl: "assets/avatar.jpg",
                     );
                   },
                 ),
               ),
-            Navbar(selectedIndex: 0),
-          ]
-        )
-      )
+              Navbar(selectedIndex: 0),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

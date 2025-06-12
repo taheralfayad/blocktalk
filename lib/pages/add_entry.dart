@@ -88,6 +88,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
                           SizedBox(height: 16),
                           TextField(
                             controller: _descriptionController,
+                            onTapOutside: (event) {
+                              FocusScope.of(context).requestFocus(FocusNode());
+                            },
                             decoration: InputDecoration(
                               labelText: 'Description',
                               border: OutlineInputBorder(),

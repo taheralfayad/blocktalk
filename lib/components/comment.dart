@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design-system/text.dart';
 
+import '../components/add_comment.dart';
 
 class Comment extends StatefulWidget {
   final String text;
@@ -25,7 +26,9 @@ class Comment extends StatefulWidget {
 
 
 class _CommentState extends State<Comment> {
-  bool _isExpanded = false;
+  bool _repliesIsExpanded = false;
+  bool _addReplyIsExpanded = false;
+
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +91,11 @@ class _CommentState extends State<Comment> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 TextButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    setState(() {
+                      _addReplyIsExpanded = !_addReplyIsExpanded;
+                    });
+                  },
                   icon: const Icon(Icons.reply, size: 16.0),
                   label: const Text('Reply'),
                 ),
@@ -96,7 +103,7 @@ class _CommentState extends State<Comment> {
                 TextButton.icon(
                 onPressed: () {
                   setState(() {
-                      _isExpanded = !_isExpanded;
+                      _repliesIsExpanded = !_repliesIsExpanded;
                     });
                   },
                   icon: const Icon(Icons.chat, size: 16.0),
@@ -104,7 +111,7 @@ class _CommentState extends State<Comment> {
                 ),
               ]
             ),
-          if (widget.replies.isNotEmpty && _isExpanded) 
+          if (widget.replies.isNotEmpty && _repliesIsExpanded) 
             ...widget.replies.map(
               (reply) => Padding(
                 padding: const EdgeInsets.only(left: 16.0, top: 8.0),
@@ -125,6 +132,12 @@ class _CommentState extends State<Comment> {
                   )
               )
             ),
+          if (widget.classification == 'Conversation' && _addReplyIsExpanded)
+            AddComment(
+              avatarUrl: widget.avatarUrl,
+              withClassification: false,
+              placeholderText: 'Add a reply...',
+            )
         ]
       )
     );

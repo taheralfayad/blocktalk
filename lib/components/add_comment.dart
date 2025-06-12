@@ -5,8 +5,14 @@ import '../design-system/colors.dart';
 
 class AddComment extends StatefulWidget {
   final String avatarUrl;
+  final String placeholderText;
+  final bool withClassification;
 
-  const AddComment({super.key, this.avatarUrl = 'assets/avatar.jpg'});
+  const AddComment({super.key,
+   this.avatarUrl = 'assets/avatar.jpg',
+   this.withClassification = true,
+   this.placeholderText = 'Add an opinion or provide a source...'
+  });
 
   @override
   State<AddComment> createState() => _AddCommentState();
@@ -59,7 +65,7 @@ class _AddCommentState extends State<AddComment> {
                   autocorrect: false,
                   controller: _commentController,
                   decoration: InputDecoration(
-                    hintText: 'Add an opinion or provide a source...',
+                    hintText: widget.placeholderText,
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
@@ -74,22 +80,23 @@ class _AddCommentState extends State<AddComment> {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              DropdownButton<String>(
-                value: _selectedClassification,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedClassification = newValue!;
-                    print('Classification changed to: $_selectedClassification');
-                  });
-                },
-                dropdownColor: AppColors.blockColor,
-                items: items.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
+              if (widget.withClassification)
+                DropdownButton<String>(
+                  value: _selectedClassification,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedClassification = newValue!;
+                      print('Classification changed to: $_selectedClassification');
+                    });
+                  },
+                  dropdownColor: AppColors.blockColor,
+                  items: items.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: BlockTalkButton(

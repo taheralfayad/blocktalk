@@ -12,9 +12,9 @@ class Block extends StatefulWidget {
   final String name;
   final String username;
   final String text;
-  final int likes;
-  final int comments;
-  final int shares;
+  final int upvotes;
+  final int downvotes;
+  final int conversations;
   final String imageUrl;
 
   const Block({
@@ -24,9 +24,9 @@ class Block extends StatefulWidget {
       required this.name,
       required this.username,
       required this.text,
-      required this.likes,
-      required this.comments,
-      required this.shares,
+      required this.upvotes,
+      required this.downvotes,
+      required this.conversations,
       required this.imageUrl,
     });
 
@@ -35,9 +35,6 @@ class Block extends StatefulWidget {
 }
 
 class _BlockState extends State<Block> {
-  int blockLikes = 50871;
-  int comments = 1571;
-  int shares = 1000;
 
   @override
   Widget build(BuildContext context) {
@@ -103,15 +100,15 @@ class _BlockState extends State<Block> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 BlockTalkText(
-                  text: "${widget.likes} Likes",
+                  text: "${widget.upvotes} Upvotes",
                   fontSize: 14.0,
                 ),
                 BlockTalkText(
-                  text: "${widget.comments} Comments",
+                  text: "${widget.downvotes} Downvotes",
                   fontSize: 14.0,
                 ),
                 BlockTalkText(
-                  text: "${widget.shares} Shares",
+                  text: "${widget.conversations} Conversations",
                   fontSize: 14.0,
                 ),
               ],
