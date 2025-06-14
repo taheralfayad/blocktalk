@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../design-system/button.dart';
 import '../design-system/colors.dart';
+import '../design-system/text.dart';
 
 class AddComment extends StatefulWidget {
   final String avatarUrl;
