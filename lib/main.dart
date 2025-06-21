@@ -5,6 +5,7 @@ import 'pages/add_entry.dart';
 import 'pages/map.dart';
 import 'pages/feed.dart';
 import 'pages/entry.dart';
+import 'pages/login.dart';
 
 void main() {
   runApp(const BlockTalkApp());
@@ -35,6 +36,11 @@ final _router = GoRouter(
          final String? blockId = state.pathParameters['blockId'];
          return NoTransitionPage(child: EntryPage(blockId: blockId));
       }
+    ),
+    GoRoute(
+      name: 'login',
+      path: '/login',
+      pageBuilder: (context, state) => NoTransitionPage(child: LoginPage()),
     )
   ],
 );

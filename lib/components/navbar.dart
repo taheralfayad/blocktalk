@@ -30,6 +30,9 @@ class _NavbarState extends State<Navbar> {
       case 2:
         context.go('/add_entry'); // Navigate to Add Entry
         break;
+      case 3:
+        context.go('/login');
+        break;
     }
   }
 
@@ -50,6 +53,10 @@ class _NavbarState extends State<Navbar> {
             CupertinoIcons.add_circled,
           ),
           label: 'Add Entry',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.person),
+          label: 'Login',
         ),
       ],
       currentIndex: widget.selectedIndex,
