@@ -56,7 +56,7 @@ class _NavbarState extends State<Navbar> {
         ),
         BottomNavigationBarItem(
           icon: Icon(CupertinoIcons.person),
-          label: 'Login',
+          label: 'User',
         ),
       ],
       currentIndex: widget.selectedIndex,

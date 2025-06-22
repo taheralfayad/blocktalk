@@ -1,16 +1,7 @@
 # block_talk
 
-A new Flutter project.
+Ensure that you have the [following repo also cloned](https://github.com/taheralfayad/blocktalk_backend) 
 
-## Getting Started
+Go to the Makefile and put your machine's IP Address in the IP_ADDRESS variable. This is so that the mobile application knows how to communicate with your backend.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To run the app, use `make run`. This will run the flutter application with the URL of the backend.
