@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/auth_provider.dart';
 
 import 'pages/add_entry.dart';
 import 'pages/map.dart';
@@ -8,7 +10,11 @@ import 'pages/entry.dart';
 import 'pages/login.dart';
 
 void main() {
-  runApp(const BlockTalkApp());
+  runApp(
+    ProviderScope(
+      child: BlockTalkApp(),
+    )
+  );
 }
 
 final _router = GoRouter(
@@ -46,11 +52,13 @@ final _router = GoRouter(
 );
 
 
-class BlockTalkApp extends StatelessWidget {
+class BlockTalkApp extends ConsumerWidget {
   const BlockTalkApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bool isAuthenticated = ref.watch(isAuthenticatedProvider);
+
     return MaterialApp.router(
       routerConfig: _router,
     );
