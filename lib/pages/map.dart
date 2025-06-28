@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design-system/colors.dart';
 
 import '../components/navbar.dart';
 
-class MapPage extends StatefulWidget {
+class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
 
   @override
-  State<MapPage> createState() => _MapPageState();
+  ConsumerState<MapPage> createState() => _MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class _MapPageState extends ConsumerState<MapPage> {
 
   @override
   Widget build(BuildContext context) {

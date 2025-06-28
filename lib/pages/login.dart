@@ -11,6 +11,8 @@ import '../design-system/textfield.dart';
 import '../components/navbar.dart';
 import '../components/notification.dart';
 
+import '../services/auth_service.dart';
+
 enum _AuthState { login, signup }
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -53,10 +55,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       }),
     );
 
+    final decoded = json.decode(response.body);
+
+    final authService = AuthService();
+
+    authService.saveRefreshToken(decoded['refresh_token']);
+    authService.saveAccessToken(decoded['access_token'], decoded['expires_at']);
+
     if (response.statusCode == 200) {
       setState(() {
         _notificationMessage = 'Login successful';
         _notificationColor = Colors.green;
+        ref.read(isAuthenticatedProvider.notifier).state = true;
+
       });
     } else {
       setState(() {
@@ -92,6 +103,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       setState(() {
         _notificationMessage = 'Signup successful';
         _notificationColor = Colors.green;
+        ref.read(isAuthenticatedProvider.notifier).state = true; // Update authentication state
       });
     } else {
       setState(() {

@@ -5,20 +5,21 @@ import '../design-system/button.dart';
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import '../components/navbar.dart';
+import '../providers/auth_provider.dart';
 
-class AddEntryPage extends StatefulWidget {
+class AddEntryPage extends ConsumerStatefulWidget {
   const AddEntryPage({super.key});
 
   @override
-  State<AddEntryPage> createState() => _AddEntryPageState();
+  ConsumerState<AddEntryPage> createState() => _AddEntryPageState();
 }
 
-class _AddEntryPageState extends State<AddEntryPage> {
+class _AddEntryPageState extends ConsumerState<AddEntryPage> {
   late TextEditingController _titleController;
   late TextEditingController _locationController;
   late TextEditingController _descriptionController;
   late TextEditingController _tagController;
-  
+
   List<String> _selectedTags = [];
   final List<String> _availableTags = [
     'Single Family',
@@ -63,69 +64,97 @@ class _AddEntryPageState extends State<AddEntryPage> {
     });
   }
 
-void _showTagSelector() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (BuildContext context, void Function(void Function()) setStateDialog) {
-          return AlertDialog(
-            backgroundColor: Colors.white,
-            title: BlockTalkText(
-              text: "Select Tags",
-              fontSize: 18.0,
-              fontWeight: FontWeight.bold,
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Wrap(
-                    spacing: 8.0,
-                    runSpacing: 4.0,
-                    children: _availableTags.map((tag) {
-                      return FilterChip(
-                        backgroundColor: Colors.white,
-                        label: Text(tag),
-                        selected: _selectedTags.contains(tag),
-                        selectedColor: AppColors.primaryButtonColor.withOpacity(0.3),
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedTags.add(tag);
-                            } else {
-                              _selectedTags.remove(tag);
-                            }
-                          });
-                          setStateDialog(() {});
-                        },
-                      );
-                    }).toList(),
+  void _showTagSelector() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder:
+              (
+                BuildContext context,
+                void Function(void Function()) setStateDialog,
+              ) {
+                return AlertDialog(
+                  backgroundColor: Colors.white,
+                  title: BlockTalkText(
+                    text: "Select Tags",
+                    fontSize: 18.0,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text('Done'),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Wrap(
+                          spacing: 8.0,
+                          runSpacing: 4.0,
+                          children: _availableTags.map((tag) {
+                            return FilterChip(
+                              backgroundColor: Colors.white,
+                              label: Text(tag),
+                              selected: _selectedTags.contains(tag),
+                              selectedColor: AppColors.primaryButtonColor
+                                  .withOpacity(0.3),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    _selectedTags.add(tag);
+                                  } else {
+                                    _selectedTags.remove(tag);
+                                  }
+                                });
+                                setStateDialog(() {});
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text('Done'),
+                    ),
+                  ],
+                );
+              },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
+    if (!isAuthenticated) {
+      return Container(
+        decoration: const BoxDecoration(gradient: AppColors.backgroundColor),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Stack(
+            children: [
+              Center(
+                child: BlockTalkText(
+                  text: "Please login to add an entry",
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Navbar(selectedIndex: 2),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.backgroundColor,
-      ),
+      decoration: const BoxDecoration(gradient: AppColors.backgroundColor),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -146,11 +175,12 @@ void _showTagSelector() {
                       ),
                       SizedBox(height: 8),
                       BlockTalkText(
-                        text: "Share what you found and help others stay informed",
+                        text:
+                            "Share what you found and help others stay informed",
                         fontSize: 16.0,
                       ),
                       SizedBox(height: 24),
-                      
+
                       BlockTalkText(
                         text: "Title",
                         fontSize: 16.0,
@@ -162,11 +192,14 @@ void _showTagSelector() {
                         decoration: InputDecoration(
                           labelText: 'Enter a descriptive title',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
+                          ),
                         ),
                       ),
                       SizedBox(height: 20),
-                      
+
                       // Location Field
                       BlockTalkText(
                         text: "Location",
@@ -183,7 +216,10 @@ void _showTagSelector() {
                               decoration: InputDecoration(
                                 labelText: 'Enter Location',
                                 border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -200,7 +236,7 @@ void _showTagSelector() {
                         },
                       ),
                       SizedBox(height: 20),
-                      
+
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -230,12 +266,17 @@ void _showTagSelector() {
                             runSpacing: 8.0,
                             children: _selectedTags.map((tag) {
                               return Container(
-                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryButtonColor.withOpacity(0.1),
+                                  color: AppColors.primaryButtonColor
+                                      .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: AppColors.primaryButtonColor.withOpacity(0.3),
+                                    color: AppColors.primaryButtonColor
+                                        .withOpacity(0.3),
                                   ),
                                 ),
                                 child: Row(
@@ -275,8 +316,11 @@ void _showTagSelector() {
                           child: Center(
                             child: Column(
                               children: [
-                                Icon(Icons.label_outline, 
-                                     color: Colors.grey.shade400, size: 32),
+                                Icon(
+                                  Icons.label_outline,
+                                  color: Colors.grey.shade400,
+                                  size: 32,
+                                ),
                                 SizedBox(height: 8),
                                 Text(
                                   "No tags selected",
@@ -298,7 +342,7 @@ void _showTagSelector() {
                           ),
                         ),
                       SizedBox(height: 20),
-                      
+
                       // Description Field
                       BlockTalkText(
                         text: "Description",
@@ -314,13 +358,16 @@ void _showTagSelector() {
                         decoration: InputDecoration(
                           labelText: 'What did you find? Provide details...',
                           border: OutlineInputBorder(),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
+                          ),
                           alignLabelWithHint: true,
                         ),
                         maxLines: 5,
                       ),
                       SizedBox(height: 24),
-                      
+
                       SizedBox(
                         width: double.infinity,
                         child: BlockTalkButton(
@@ -331,7 +378,9 @@ void _showTagSelector() {
                             print("Entry submitted:");
                             print("Title: ${_titleController.text}");
                             print("Location: ${_locationController.text}");
-                            print("Description: ${_descriptionController.text}");
+                            print(
+                              "Description: ${_descriptionController.text}",
+                            );
                             print("Tags: $_selectedTags");
                           },
                         ),

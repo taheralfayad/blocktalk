@@ -1,6 +1,6 @@
 # Makefile
 
-IP_ADDRESS=YOUR_MACHINE_IP_ADDRESS
+IP_ADDRESS=http://localhost
 
 run:
 ifeq ($(IP_ADDRESS),YOUR_MACHINE_IP_ADDRESS)

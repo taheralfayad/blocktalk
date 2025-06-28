@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
@@ -6,14 +7,14 @@ import '../design-system/text.dart';
 import '../components/block.dart';
 import '../components/navbar.dart';
 
-class FeedPage extends StatefulWidget {
+class FeedPage extends ConsumerStatefulWidget {
   const FeedPage({super.key});
 
   @override
-  State<FeedPage> createState() => _FeedPageState();
+  ConsumerState<FeedPage> createState() => _FeedPageState();
 }
 
-class _FeedPageState extends State<FeedPage> {
+class _FeedPageState extends ConsumerState<FeedPage> {
   @override
   Widget build(BuildContext context) {
     return Container(

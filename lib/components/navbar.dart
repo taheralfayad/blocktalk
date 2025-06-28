@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design-system/colors.dart';
 
-class Navbar extends StatefulWidget {
+import '../providers/auth_provider.dart';
+
+class Navbar extends ConsumerStatefulWidget {
   final int selectedIndex;
 
   const Navbar({
@@ -13,12 +16,12 @@ class Navbar extends StatefulWidget {
     });
 
   @override
-  State<Navbar> createState() => _NavbarState();
+  ConsumerState<Navbar> createState() => _NavbarState();
 }
 
-class _NavbarState extends State<Navbar> {
+class _NavbarState extends ConsumerState<Navbar> {
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index, bool isAuthenticated) {
 
     switch (index) {
       case 0:
@@ -31,6 +34,9 @@ class _NavbarState extends State<Navbar> {
         context.go('/add_entry'); // Navigate to Add Entry
         break;
       case 3:
+        isAuthenticated
+          ? context.go('/user') // Navigate to User Profile if authenticated
+          :
         context.go('/login');
         break;
     }
@@ -38,6 +44,8 @@ class _NavbarState extends State<Navbar> {
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
     return CupertinoTabBar(
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(
@@ -60,7 +68,7 @@ class _NavbarState extends State<Navbar> {
         ),
       ],
       currentIndex: widget.selectedIndex,
-      onTap: _onItemTapped,
+      onTap: (index) => _onItemTapped(index, isAuthenticated),
       backgroundColor: AppColors.navigationBarColor,
       inactiveColor: Colors.white70,
       activeColor: Colors.white,
