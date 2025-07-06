@@ -55,8 +55,10 @@ class AuthService {
     String? expirationDate = await _storage.read(key: 'access_token_expiration');
 
     if (accessToken == null || expirationDate == null) {
-      // If either token or expiration date is missing, return null
-      return null;
+      await deleteAccessToken();
+      await _getNewAccessToken();
+
+      return await getAccessToken();  
     }
 
     int timestamp = int.parse(expirationDate);

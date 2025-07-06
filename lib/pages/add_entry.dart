@@ -1,11 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
 
 import '../design-system/button.dart';
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
+import "../design-system/dropdown_textfield.dart";
 import '../components/navbar.dart';
 import '../providers/auth_provider.dart';
+import '../services/auth_service.dart';
 
 class AddEntryPage extends ConsumerStatefulWidget {
   const AddEntryPage({super.key});
@@ -16,9 +23,16 @@ class AddEntryPage extends ConsumerStatefulWidget {
 
 class _AddEntryPageState extends ConsumerState<AddEntryPage> {
   late TextEditingController _titleController;
-  late TextEditingController _locationController;
+  TextEditingController _locationController = TextEditingController();
   late TextEditingController _descriptionController;
   late TextEditingController _tagController;
+  final List<dynamic> _addressSuggestions = [];
+  final List<String> _suggestions = [];
+  int _lastProcessedLength =
+      0; // To track the last processed length of the location input. Every 3 characters, we will fetch suggestions.
+
+  Position? _currentPosition;
+  bool _optionInTypeAheadDoesNotEqualControllerText = true; // Used to ensure valid input in the typeahead field.
 
   List<String> _selectedTags = [];
   final List<String> _availableTags = [
@@ -32,13 +46,74 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     'Lot Sold',
   ];
 
+  void _optionDoesNotEqualControllerText(
+      bool value) {
+    setState(() {
+      _optionInTypeAheadDoesNotEqualControllerText = value;
+    });
+  }
+
+  Future<void> _fetchSuggestions(String query) async {
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:3000',
+    );
+
+    final url = Uri.parse('$backendUrl/autocomplete-address?query=$query');
+
+    String? accessToken = await AuthService().getAccessToken();
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': accessToken.toString(),
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> backendResponseSuggestions = json.decode(
+        response.body,
+      );
+      setState(() {
+        _addressSuggestions.clear();
+        _addressSuggestions.addAll(backendResponseSuggestions);
+        _suggestions.clear();
+        _suggestions.addAll(
+          backendResponseSuggestions
+              .map((suggestion) => suggestion['address'] as String)
+              .toList(),
+        );
+      });
+
+      _locationController.text = _locationController
+          .text; // Trigger a rebuild to update the suggestions in the UI
+
+      print('Suggestions fetched successfully: $_suggestions');
+    } else {
+      print('Failed to fetch suggestions: ${response.statusCode}');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController();
-    _locationController = TextEditingController();
     _descriptionController = TextEditingController();
     _tagController = TextEditingController();
+
+    _locationController.addListener(() {
+      final currentLength = _locationController.text.length;
+
+      if (currentLength - _lastProcessedLength >= 3) {
+        _fetchSuggestions(_locationController.text);
+        _lastProcessedLength = currentLength;
+      }
+
+      if (currentLength < _lastProcessedLength) {
+        _lastProcessedLength = currentLength;
+      }
+    });
   }
 
   @override
@@ -48,6 +123,154 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     _descriptionController.dispose();
     _tagController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitEntry() async {
+    final title = _titleController.text.trim();
+    final location = _locationController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    if (_optionInTypeAheadDoesNotEqualControllerText) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please select a valid location')));
+      return;
+    }
+
+    if (title.isEmpty || location.isEmpty || description.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Please fill in all fields')));
+      return;
+    }
+
+    AuthService authService = AuthService();
+
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:3000',
+    );
+
+    final url = Uri.parse('$backendUrl/create-entry');
+
+    final entryData = {
+      'title': title,
+      'location': location,
+      'description': description,
+      'tags': _selectedTags,
+      'latitude': _currentPosition?.latitude,
+      'longitude': _currentPosition?.longitude,
+    };
+
+    String? accessToken = await authService.getAccessToken();
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': accessToken.toString(),
+      },
+      body: entryData.isNotEmpty ? json.encode(entryData) : null,
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Entry submitted successfully')));
+      // Clear the fields after submission
+      _titleController.clear();
+      _locationController.clear();
+      _descriptionController.clear();
+      _selectedTags.clear();
+      _currentPosition = null;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit entry: ${response.body}')),
+      );
+    }
+  }
+
+  void _setCurrentPosition(Position position) {
+    setState(() {
+      _currentPosition = position;
+    });
+  }
+
+  Future<String> _determinePositionAndAddress() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return Future.error('Location services are disabled.');
+    }
+
+    // Check and request permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        return Future.error('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error(
+        'Location permissions are permanently denied, we cannot request permissions.',
+      );
+    }
+
+    // Get current position
+    Position position = await Geolocator.getCurrentPosition();
+
+    _setCurrentPosition(position);
+
+    // Reverse geocoding
+    List<Placemark> placemarks = await placemarkFromCoordinates(
+      position.latitude,
+      position.longitude,
+    );
+
+    Placemark place = placemarks[0];
+
+    // Create a readable address
+    String address =
+        '${place.street}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
+
+    return address;
+  }
+
+  // If someone backspaces the location input, we need to reset the suggestions
+  void _resetLocationController() {
+    _locationController.clear();
+    _lastProcessedLength = 0;
+    _addressSuggestions.clear();
+    _suggestions.clear();
+  }
+
+  // This function finds the coordinates from the address suggestions
+  void _setCoordinatesFromAddress(String address) {
+    for (var suggestion in _addressSuggestions) {
+      if (suggestion['address'] == address) {
+        double latitude = suggestion['lat'];
+        double longitude = suggestion['lon'];
+        _setCurrentPosition(
+          Position(
+            latitude: latitude,
+            longitude: longitude,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          ),
+        );
+      }
+    }
   }
 
   void _addTag(String tag) {
@@ -199,7 +422,6 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-
                       // Location Field
                       BlockTalkText(
                         text: "Location",
@@ -207,24 +429,16 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                         fontWeight: FontWeight.w600,
                       ),
                       SizedBox(height: 8),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _locationController,
-                              decoration: InputDecoration(
-                                labelText: 'Enter Location',
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8),
+                      BlockTalkTypeAhead(
+                        suggestions: _suggestions,
+                        controller: _locationController,
+                        selectedCallbacks: [
+                          _setCoordinatesFromAddress,
                         ],
+                        optionDoesNotEqualControllerText:
+                            _optionInTypeAheadDoesNotEqualControllerText,
+                        optionDoesNotEqualControllerTextCallback:
+                            _optionDoesNotEqualControllerText,
                       ),
                       SizedBox(height: 8),
                       BlockTalkButton(
@@ -232,7 +446,22 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                         type: "outline",
                         buttonColor: AppColors.primaryButtonColor,
                         onPressed: () {
-                          print("Getting current location...");
+                          _determinePositionAndAddress()
+                              .then((position) {
+                                print("Current position: $_currentPosition");
+                                setState(() {
+                                  _locationController.text = position;
+                                });
+                              })
+                              .catchError((error) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "Error getting location: $error",
+                                    ),
+                                  ),
+                                );
+                              });
                         },
                       ),
                       SizedBox(height: 20),
@@ -375,13 +604,7 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                           type: "solid",
                           buttonColor: AppColors.primaryButtonColor,
                           onPressed: () {
-                            print("Entry submitted:");
-                            print("Title: ${_titleController.text}");
-                            print("Location: ${_locationController.text}");
-                            print(
-                              "Description: ${_descriptionController.text}",
-                            );
-                            print("Tags: $_selectedTags");
+                            _submitEntry();
                           },
                         ),
                       ),
