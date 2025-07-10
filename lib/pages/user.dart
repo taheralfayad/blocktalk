@@ -6,10 +6,11 @@ import '../components/block.dart';
 import '../components/carousel.dart';
 import '../components/location_items.dart';
 
-
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import '../design-system/button.dart';
+
+import '../services/auth_service.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -151,6 +152,17 @@ Widget build(BuildContext context) {
                       height: 120,
                       viewportFraction: 0.6,
                     ),
+                    SizedBox(height: 16),
+                    Center(
+                      child: BlockTalkButton(
+                        text: 'Sign Out',
+                        type: "solid",
+                        onPressed: () {
+                          AuthService().logOut();
+                          context.go('/login');
+                        }
+                      )
+                    )
                   ],
                 ),
               ),

@@ -46,6 +46,7 @@ dependencies:
   geolocator: ^14.0.1
   geocoding: ^4.0.0
   flutter_typeahead: ^5.2.0
+  extended_phone_number_input: ^1.0.2
 
 dev_dependencies:
   flutter_test:
