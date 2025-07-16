@@ -15,7 +15,14 @@ import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
 class AddEntryPage extends ConsumerStatefulWidget {
-  const AddEntryPage({super.key});
+  final String? latitude;
+  final String? longitude;
+  final String? address;
+  const AddEntryPage({
+    super.key,
+    this.latitude,
+    this.longitude,
+    this.address,});
 
   @override
   ConsumerState<AddEntryPage> createState() => _AddEntryPageState();
@@ -87,7 +94,7 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
       });
 
       _locationController.text = _locationController
-          .text; // Trigger a rebuild to update the suggestions in the UI
+          .text;
 
       print('Suggestions fetched successfully: $_suggestions');
     } else {
@@ -101,6 +108,8 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
     _tagController = TextEditingController();
+
+    _locationController.text = widget.address ?? '';
 
     _locationController.addListener(() {
       final currentLength = _locationController.text.length;

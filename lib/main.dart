@@ -19,8 +19,7 @@ final _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(
-      name:
-          'home', // Optional, add name to your routes. Allows you navigate by name instead of path
+      name: 'home',
       path: '/',
       pageBuilder: (context, state) => NoTransitionPage(child: FeedPage()),
     ),
@@ -32,7 +31,18 @@ final _router = GoRouter(
     GoRoute(
       name: 'add_entry',
       path: '/add_entry',
-      pageBuilder: (context, state) => NoTransitionPage(child: AddEntryPage()),
+      pageBuilder: (context, state) {
+        final String? latitude = state.uri.queryParameters['latitude'];
+        final String? longitude = state.uri.queryParameters['longitude'];
+        final String? address = state.uri.queryParameters['address'];
+        return NoTransitionPage(
+          child: AddEntryPage(
+            latitude: latitude,
+            longitude: longitude,
+            address: address,
+          ),
+        );
+      }
     ),
     GoRoute(
       name: 'entry',
@@ -51,7 +61,7 @@ final _router = GoRouter(
       name: 'user',
       path: '/user',
       pageBuilder: (context, state) => NoTransitionPage(child: UserPage()),
-    )
+    ),
   ],
 );
 
@@ -72,15 +82,12 @@ class _BlockTalkAppState extends ConsumerState<BlockTalkApp> {
   void _checkAuthentication(WidgetRef ref) async {
     String? refreshToken = await AuthService().getRefreshToken();
 
-    print("Refresh tok from checkAuth" + refreshToken.toString());
-
     if (refreshToken == null || refreshToken.isEmpty) {
       ref.read(isAuthenticatedProvider.notifier).state = false;
     } else {
       await AuthService().getAccessToken();
       ref.read(isAuthenticatedProvider.notifier).state = true;
     }
-
   }
 
   @override
