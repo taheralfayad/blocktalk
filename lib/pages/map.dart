@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../design-system/colors.dart';
 
 import '../components/navbar.dart';
+import '../components/map_location_pin.dart';
 
 import '../services/auth_service.dart';
 
@@ -28,6 +29,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   LatLngBounds? _lastBounds;
   List<Marker> _markers = [];
   MapController _mapController = MapController();
+  bool _hasFetchedInitially = false;
 
   static const Duration debounceDuration = Duration(seconds: 2);
 
@@ -35,6 +37,17 @@ class _MapPageState extends ConsumerState<MapPage> {
   void initState() {
     super.initState();
     _mapController = MapController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final camera = _mapController.camera;
+      final bounds = camera.visibleBounds;
+
+      if (bounds != null) {
+        _lastBounds = bounds;
+        _hasFetchedInitially = true;
+        _retrieveEntriesWithinBounds();
+      }
+    });
   }
 
   static const String mapTilerApiKey = String.fromEnvironment(
@@ -91,11 +104,19 @@ class _MapPageState extends ConsumerState<MapPage> {
       final List<Marker> markers = [];
 
       for (var entry in entries) {
+        print(entry);
         final marker = Marker(
           point: LatLng(entry['latitude'], entry['longitude']),
-          width: 40.0,
-          height: 40.0,
-          child: Icon(Icons.location_on, color: Colors.red, size: 40.0),
+          width: 36.0,
+          height: 36.0,
+          child: LocationPin(
+            onTap: () {
+              context.goNamed(
+                'entry',
+                pathParameters: {'blockId': (entry['id'].toString())},
+              );
+            },
+          ),
         );
         markers.add(marker);
       }
@@ -119,6 +140,7 @@ class _MapPageState extends ConsumerState<MapPage> {
                 options: MapOptions(
                   initialCenter: LatLng(28.526540, -81.199780),
                   initialZoom: 13.0,
+                  minZoom: 2.0,
                   interactionOptions: const InteractionOptions(
                     flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag,
                   ),
@@ -127,8 +149,10 @@ class _MapPageState extends ConsumerState<MapPage> {
                     _debounceTimer = Timer(debounceDuration, () {
                       final bounds = camera.visibleBounds;
 
-                      if (_lastBounds != bounds) {
+                      if (_lastBounds != bounds || !_hasFetchedInitially) {
+                        print("Fetching entries within bounds: $bounds");
                         _lastBounds = bounds;
+                        _hasFetchedInitially = true;
                         _retrieveEntriesWithinBounds();
                       }
                     });

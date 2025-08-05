@@ -13,6 +13,7 @@ import "../design-system/dropdown_textfield.dart";
 import '../components/navbar.dart';
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
+import '../services/location_service.dart';
 
 class AddEntryPage extends ConsumerStatefulWidget {
   final String? latitude;
@@ -39,9 +40,46 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
       0; // To track the last processed length of the location input. Every 3 characters, we will fetch suggestions.
 
   Position? _currentPosition;
-  bool _optionInTypeAheadDoesNotEqualControllerText = true; // Used to ensure valid input in the typeahead field.
+  late bool _locationControllerTextInSuggestions;
 
-  List<String> _selectedTags = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController();
+    _descriptionController = TextEditingController();
+    _tagController = TextEditingController();
+
+    _locationController.text = widget.address ?? '';
+
+    if (_locationController.text.isNotEmpty) {
+      _fetchSuggestions(_locationController.text);
+    }
+
+    print('Initial address: ${widget.address}');
+    print('Initial suggestions: $_suggestions');
+
+    _locationControllerTextInSuggestions = widget.address != null &&
+        widget.address!.isNotEmpty &&
+        _suggestions.contains(widget.address);
+
+    print('Initial suggestion check: $_locationControllerTextInSuggestions');
+
+    _locationController.addListener(() {
+      final currentLength = _locationController.text.length;
+
+      if (currentLength - _lastProcessedLength >= 3) {
+        _fetchSuggestions(_locationController.text);
+        _lastProcessedLength = currentLength;
+      }
+
+      if (currentLength < _lastProcessedLength) {
+        _lastProcessedLength = currentLength;
+      }
+    });
+  }
+
+  final List<String> _selectedTags = [];
   final List<String> _availableTags = [
     'Single Family',
     'Multi Family',
@@ -52,13 +90,6 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     'Lot For Sale',
     'Lot Sold',
   ];
-
-  void _optionDoesNotEqualControllerText(
-      bool value) {
-    setState(() {
-      _optionInTypeAheadDoesNotEqualControllerText = value;
-    });
-  }
 
   Future<void> _fetchSuggestions(String query) async {
     const backendUrl = String.fromEnvironment(
@@ -93,37 +124,12 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
         );
       });
 
-      _locationController.text = _locationController
-          .text;
-
       print('Suggestions fetched successfully: $_suggestions');
     } else {
       print('Failed to fetch suggestions: ${response.statusCode}');
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _titleController = TextEditingController();
-    _descriptionController = TextEditingController();
-    _tagController = TextEditingController();
-
-    _locationController.text = widget.address ?? '';
-
-    _locationController.addListener(() {
-      final currentLength = _locationController.text.length;
-
-      if (currentLength - _lastProcessedLength >= 3) {
-        _fetchSuggestions(_locationController.text);
-        _lastProcessedLength = currentLength;
-      }
-
-      if (currentLength < _lastProcessedLength) {
-        _lastProcessedLength = currentLength;
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -139,7 +145,8 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
 
-    if (_optionInTypeAheadDoesNotEqualControllerText) {
+    if (_locationControllerTextInSuggestions &&
+        !_suggestions.contains(location)) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Please select a valid location')));
@@ -444,10 +451,13 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                         selectedCallbacks: [
                           _setCoordinatesFromAddress,
                         ],
-                        optionDoesNotEqualControllerText:
-                            _optionInTypeAheadDoesNotEqualControllerText,
-                        optionDoesNotEqualControllerTextCallback:
-                            _optionDoesNotEqualControllerText,
+                        optionInSuggestions: _locationControllerTextInSuggestions,
+                        optionInSuggestionsCallback: (value) {
+                          print("Value changed: $value");
+                          setState(() {
+                            _locationControllerTextInSuggestions = value;
+                          });
+                        },
                       ),
                       SizedBox(height: 8),
                       BlockTalkButton(
@@ -455,11 +465,15 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                         type: "outline",
                         buttonColor: AppColors.primaryButtonColor,
                         onPressed: () {
-                          _determinePositionAndAddress()
-                              .then((position) {
-                                print("Current position: $_currentPosition");
+                          LocationService().determinePositionAndAddress()
+                              .then((result) {
+                                final (Position position, Placemark place) = result;
+                                String address =
+                                    '${place.street}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}';
+                                _setCurrentPosition(position);
                                 setState(() {
-                                  _locationController.text = position;
+                                  _locationController.text = address;
+                                  _locationControllerTextInSuggestions = _suggestions.contains(address);
                                 });
                               })
                               .catchError((error) {

@@ -7,11 +7,10 @@ import '../design-system/text.dart';
 
 
 class Block extends StatefulWidget {
-  final String blockId;
+  final int blockId;
   final String blockText;
   final String name;
   final String username;
-  final String text;
   final int upvotes;
   final int downvotes;
   final int conversations;
@@ -23,7 +22,6 @@ class Block extends StatefulWidget {
       required this.blockText,
       required this.name,
       required this.username,
-      required this.text,
       required this.upvotes,
       required this.downvotes,
       required this.conversations,
@@ -43,7 +41,7 @@ class _BlockState extends State<Block> {
       onTap: () {
         context.goNamed(
           'entry',
-          pathParameters: {'blockId': widget.blockId},
+          pathParameters: {'blockId': widget.blockId.toString()},
         );
       },
       child: Container(

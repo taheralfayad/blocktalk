@@ -24,22 +24,20 @@ class _UserPageState extends State<UserPage> {
   List<Widget> _buildBlockCarouselItems() {
     return [
       Block(
-        blockId: "block_1",
+        blockId: 1,
         blockText: "This is a sample block text.",
         name: "User 1",
         username: "user_1",
-        text: "This is some sample text for block 1.",
         upvotes: 50871,
         downvotes: 1571,
         conversations: 1000,
         imageUrl: "assets/avatar.jpg",
       ),
       Block(
-        blockId: "block_2",
+        blockId: 2,
         blockText: "This is another sample block text.",
         name: "User 2",
         username: "user_2",
-        text: "This is some sample text for block 2.",
         upvotes: 30000,
         downvotes: 500,
         conversations: 500,
