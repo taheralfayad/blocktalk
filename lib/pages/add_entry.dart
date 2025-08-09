@@ -56,14 +56,9 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
       _fetchSuggestions(_locationController.text);
     }
 
-    print('Initial address: ${widget.address}');
-    print('Initial suggestions: $_suggestions');
-
     _locationControllerTextInSuggestions = widget.address != null &&
         widget.address!.isNotEmpty &&
         _suggestions.contains(widget.address);
-
-    print('Initial suggestion check: $_locationControllerTextInSuggestions');
 
     _locationController.addListener(() {
       final currentLength = _locationController.text.length;

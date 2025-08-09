@@ -245,7 +245,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                           username: feedItem['username'] ?? '',
                           upvotes: feedItem['upvotes'] ?? 0,
                           downvotes: feedItem['downvotes'] ?? 0,
-                          conversations: feedItem['conversations'] ?? 0,
+                          conversations: feedItem['number_of_comments'] ?? 69,
                           imageUrl:
                               'assets/images/default_avatar.png', // Placeholder image
                         );

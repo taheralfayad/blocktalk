@@ -104,7 +104,6 @@ class _MapPageState extends ConsumerState<MapPage> {
       final List<Marker> markers = [];
 
       for (var entry in entries) {
-        print(entry);
         final marker = Marker(
           point: LatLng(entry['latitude'], entry['longitude']),
           width: 36.0,
@@ -150,7 +149,6 @@ class _MapPageState extends ConsumerState<MapPage> {
                       final bounds = camera.visibleBounds;
 
                       if (_lastBounds != bounds || !_hasFetchedInitially) {
-                        print("Fetching entries within bounds: $bounds");
                         _lastBounds = bounds;
                         _hasFetchedInitially = true;
                         _retrieveEntriesWithinBounds();
