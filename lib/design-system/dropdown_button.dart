@@ -5,11 +5,13 @@ import './text.dart';
 class BlockTalkDropdownButton extends StatefulWidget {
   final List<String> items;
   final Function(String)? onChanged;
+  final String? initialValue;
 
   const BlockTalkDropdownButton({
     super.key,
     required this.items,
     required this.onChanged,
+    required this.initialValue,
   });
 
   @override
@@ -17,8 +19,15 @@ class BlockTalkDropdownButton extends StatefulWidget {
 }
 
 class _BlockTalkDropdownButtonState extends State<BlockTalkDropdownButton> {
-  String? selectedValue = '10mi';
-  String _currentChoice = '10mi';
+  String? selectedValue;
+  String? _currentChoice;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentChoice = widget.initialValue ?? widget.items.first;
+    selectedValue = _currentChoice;
+  }
 
   void setCurrentChoice(String? value) {
     if (value == null || value.isEmpty) return;

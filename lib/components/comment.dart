@@ -1,23 +1,35 @@
+import 'dart:convert';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import '../design-system/text.dart';
 
 import '../components/add_comment.dart';
 
+import '../services/auth_service.dart';
+
 class Comment extends StatefulWidget {
+  final int id;
+  final int? parentId; // Optional parent ID for nested comments
+  final int entryId;
+  final int numOfReplies;
   final String text;
   final String author;
   final String classification;
   final String avatarUrl;
-  final List<Comment> replies;
 
   const Comment({
     super.key,
+    required this.id,
     required this.text,
+    required this.entryId,
     required this.author,
     required this.classification,
     this.avatarUrl = 'assets/avatar.jpg',
-    this.replies = const [],
+    this.parentId,
+    this.numOfReplies = 0,
   });
 
   @override
@@ -26,9 +38,116 @@ class Comment extends StatefulWidget {
 
 
 class _CommentState extends State<Comment> {
-  bool _repliesIsExpanded = false;
+  ValueNotifier<bool> _repliesIsExpanded = ValueNotifier<bool>(false);
   bool _addReplyIsExpanded = false;
+  late int _repliesCount;
 
+  List<Comment> replies = [];
+
+  Future<void> fetchReplies() async {
+    const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8080');
+
+    final response = await http.get(
+      Uri.parse('$backendUrl/retrieve-comment-replies?comment_id=${widget.id}&entry_id=${widget.entryId}'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      print('Fetched replies: $data');
+
+      setState(() {
+        replies = data.map((reply) => Comment(
+          id: reply['id'],
+          entryId: widget.entryId,
+          text: reply['context'],
+          parentId: widget.id,
+          author: reply['username'],
+          classification: reply['type'],
+          numOfReplies: reply['num_of_replies'] ?? 0,
+        )).toList();
+
+        _repliesCount = replies.length;
+      });
+    }
+    else {
+      print('Failed to fetch replies: ${response.statusCode} - ${response.body}');
+      throw Exception('Failed to fetch replies');
+    }
+
+  }
+
+  Future<void> addReply(String replyText, String classification) async {
+    const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8080');
+
+    AuthService authService = AuthService();
+    String? accessToken;
+
+    try {
+      accessToken = await authService.getAccessToken();
+    }
+    catch (e) {
+      print('Error fetching access token: $e');
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse('$backendUrl/add-comment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': accessToken.toString(),
+      },
+      body: jsonEncode({
+        'entry_id': widget.entryId,
+        'parent_id': widget.id ?? null,
+        'context': replyText,
+        'classification': classification.toLowerCase(),
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print('Reply added successfully: ${response.body}');
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      final newReply = Comment(
+        id: data['id'],
+        author: data['username'] ?? 'Unknown',
+        text: data['context'] ?? '',
+        classification: data['type'] ?? 'opinion',
+        avatarUrl: widget.avatarUrl,
+        entryId: data['entry_id'],
+        numOfReplies: data['num_of_replies'] ?? 0,
+      );
+
+      setState(() {
+        replies.add(newReply);
+
+        _repliesCount++;
+      });
+
+    }
+    else {
+      print('Failed to add reply: ${response.statusCode} - ${response.body}');
+      throw Exception('Failed to add reply');
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _repliesCount = widget.numOfReplies;
+
+    _repliesIsExpanded.addListener(() {
+      print("Replies expanded: ${_repliesIsExpanded.value}");
+      if (_repliesIsExpanded.value && replies.isEmpty) {
+        fetchReplies();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +205,7 @@ class _CommentState extends State<Comment> {
               fontSize: 16.0,
             ),
           ),
-          if (widget.classification == 'Conversation') 
+          if (widget.classification == 'opinion') 
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -103,16 +222,16 @@ class _CommentState extends State<Comment> {
                 TextButton.icon(
                 onPressed: () {
                   setState(() {
-                      _repliesIsExpanded = !_repliesIsExpanded;
+                    _repliesIsExpanded.value = !_repliesIsExpanded.value;
                     });
                   },
                   icon: const Icon(Icons.chat, size: 16.0),
-                  label: Text('Replies (${widget.replies.length})'),
+                  label: Text('Replies ($_repliesCount)'),
                 ),
               ]
             ),
-          if (widget.replies.isNotEmpty && _repliesIsExpanded) 
-            ...widget.replies.map(
+          if (replies.isNotEmpty && _repliesIsExpanded.value) 
+            ...replies.map(
               (reply) => Padding(
                 padding: const EdgeInsets.only(left: 16.0, top: 8.0),
                 child:
@@ -121,22 +240,31 @@ class _CommentState extends State<Comment> {
                   children: [
                     Expanded(
                       child: Comment(
+                        id: reply.id,
                         text: reply.text,
                         author: reply.author,
                         classification: reply.classification,
                         avatarUrl: reply.avatarUrl,
-                        replies: reply.replies,
+                        entryId: widget.entryId,
+                        numOfReplies: reply.numOfReplies,
                       )
                     ),
                   ],
                   )
               )
             ),
-          if (widget.classification == 'Conversation' && _addReplyIsExpanded)
+          if (widget.classification == 'opinion' && _addReplyIsExpanded)
             AddComment(
               avatarUrl: widget.avatarUrl,
               withClassification: false,
               placeholderText: 'Add a reply...',
+              commentController: TextEditingController(),
+              onSubmit: (String replyText, String classification) {
+                addReply(replyText, classification);
+                setState(() {
+                  _addReplyIsExpanded = false;
+                });
+              },
             )
         ]
       )

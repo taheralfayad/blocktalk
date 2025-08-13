@@ -2,17 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../design-system/button.dart';
 import '../design-system/colors.dart';
-import '../design-system/text.dart';
+import '../design-system/dropdown_button.dart';
 
 class AddComment extends StatefulWidget {
   final String avatarUrl;
   final String placeholderText;
   final bool withClassification;
+  final Function(String, String)? onSubmit;
+  final TextEditingController commentController;
+  final String initialClassification;
+  final Function(String)? onClassificationChanged;
 
-  const AddComment({super.key,
-   this.avatarUrl = 'assets/avatar.jpg',
-   this.withClassification = true,
-   this.placeholderText = 'Add an opinion or provide a source...'
+  const AddComment({
+    super.key,
+    this.avatarUrl = 'assets/avatar.jpg',
+    this.withClassification = true,
+    this.placeholderText = 'Add an opinion or provide a source...',
+    this.onSubmit,
+    required this.commentController,
+    this.initialClassification = 'Opinion',
+    this.onClassificationChanged,
   });
 
   @override
@@ -20,13 +29,9 @@ class AddComment extends StatefulWidget {
 }
 
 class _AddCommentState extends State<AddComment> {
-  final TextEditingController _commentController = TextEditingController();
   String _selectedClassification = 'Opinion';
 
-  List<String> items = [
-    'Opinion',
-    'Source',
-  ];
+  List<String> items = ['Opinion', 'Source'];
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +69,11 @@ class _AddCommentState extends State<AddComment> {
                   },
                   autofocus: false,
                   autocorrect: false,
-                  controller: _commentController,
+                  controller: widget.commentController,
+                  minLines: 1,
+                  maxLength: 200,
+                  maxLines: 4,
+                  keyboardType: TextInputType.multiline,
                   decoration: InputDecoration(
                     hintText: widget.placeholderText,
                     border: InputBorder.none,
@@ -74,7 +83,7 @@ class _AddCommentState extends State<AddComment> {
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
-              ),
+              )
             ],
           ),
           SizedBox(height: 8.0),
@@ -82,21 +91,21 @@ class _AddCommentState extends State<AddComment> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               if (widget.withClassification)
-                DropdownButton<String>(
-                  value: _selectedClassification,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedClassification = newValue!;
-                      print('Classification changed to: $_selectedClassification');
-                    });
-                  },
-                  dropdownColor: AppColors.blockColor,
-                  items: items.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
+                SizedBox(
+                  width: 120,
+                  height: 40,
+                  child: BlockTalkDropdownButton(
+                    initialValue: widget.initialClassification,
+                    items: items,
+                    onChanged: (String? value) {
+                      if (value != null && value.isNotEmpty) {
+                        setState(() {
+                          _selectedClassification = value;
+                        });
+                        widget.onClassificationChanged?.call(value);
+                      }
+                    },
+                  ),
                 ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -104,11 +113,14 @@ class _AddCommentState extends State<AddComment> {
                   text: 'Submit',
                   type: "outline",
                   onPressed: () {
-                    if (_commentController.text.isNotEmpty) {
-                      // Handle comment submission logic here
-                      print('Comment submitted: ${_commentController.text}');
-                      print('Classification: $_selectedClassification');
-                      _commentController.clear();
+                    if (widget.commentController.text.isNotEmpty) {
+                      if (widget.onSubmit != null) {
+                        widget.onSubmit!(
+                          widget.commentController.text,
+                          _selectedClassification,
+                        );
+                      }
+                      widget.commentController.clear();
                     }
                   },
                 ),
