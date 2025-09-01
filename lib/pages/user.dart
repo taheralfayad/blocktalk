@@ -25,6 +25,8 @@ class _UserPageState extends State<UserPage> {
     return [
       Block(
         blockId: 1,
+        title: "Sample Block Title",
+        address: "123 Main St, City, State",
         blockText: "This is a sample block text.",
         name: "User 1",
         username: "user_1",
@@ -35,6 +37,8 @@ class _UserPageState extends State<UserPage> {
       ),
       Block(
         blockId: 2,
+        title: "Another Block Title",
+        address: "456 Elm St, City, State",
         blockText: "This is another sample block text.",
         name: "User 2",
         username: "user_2",

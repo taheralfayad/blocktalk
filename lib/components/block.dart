@@ -8,6 +8,8 @@ import '../design-system/text.dart';
 
 class Block extends StatefulWidget {
   final int blockId;
+  final String title;
+  final String address;
   final String blockText;
   final String name;
   final String username;
@@ -18,7 +20,9 @@ class Block extends StatefulWidget {
 
   const Block({
       super.key,
-      required this.blockId, 
+      required this.blockId,
+      required this.title,
+      required this.address,
       required this.blockText,
       required this.name,
       required this.username,
@@ -86,12 +90,27 @@ class _BlockState extends State<Block> {
             ),
             Padding(
               padding: const EdgeInsets.only(
+                top: 12.0,
+              ),
+              child: BlockTalkText(
+                text: widget.title,
+                fontSize: 18.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
                 bottom: 16.0,
                 top: 12.0,
                 ),
               child: BlockTalkText(
                 text: widget.blockText,
               ),
+            ),
+            BlockTalkText(
+              text: widget.address,
+              fontSize: 14.0,
+              color: AppColors.secondaryTextColor,
             ),
             const SizedBox(height: 8),
             Row(

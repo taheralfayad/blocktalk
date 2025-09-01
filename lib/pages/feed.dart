@@ -13,6 +13,7 @@ import '../design-system/dropdown_textfield.dart';
 import '../design-system/dropdown_button.dart';
 import '../design-system/button.dart';
 import '../design-system/text.dart';
+import '../design-system/no_content_found.dart';
 
 import '../components/block.dart';
 import '../components/navbar.dart';
@@ -151,9 +152,15 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         ),
       );
       if (response.statusCode == 200) {
+        print('Feed data fetched successfully: ${response.body}');
         final List<dynamic> feedData = jsonDecode(response.body);
         setState(() {
           _feedData = feedData;
+        });
+      } else if (response.statusCode == 204) {
+        print('No content found for the specified location and radius.');
+        setState(() {
+          _feedData = [];
         });
       } else {
         throw Exception('Failed to load feed');
@@ -230,29 +237,35 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                       ),
                     ],
                   ),
+                  if (_feedData.isEmpty) 
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: _feedData.length,
-                      itemBuilder: (context, index) {
-                        final feedItem = _feedData[index];
-                        return Block(
-                          blockId: feedItem['id'] ?? '',
-                          blockText: feedItem['content'] ?? '',
-                          name:
-                              feedItem['first_name'] +
-                                  ' ' +
-                                  feedItem['last_name'] ??
-                              '',
-                          username: feedItem['username'] ?? '',
-                          upvotes: feedItem['upvotes'] ?? 0,
-                          downvotes: feedItem['downvotes'] ?? 0,
-                          conversations: feedItem['number_of_comments'] ?? 69,
-                          imageUrl:
-                              'assets/images/default_avatar.png', // Placeholder image
-                        );
-                      },
+                    child: NoContentFound(
+                      message: "No content found in this area. We'd love to see you add some!",
+                    )
+                  )
+                  else
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _feedData.length,
+                        itemBuilder: (context, index) {
+                          final feedItem = _feedData[index];
+                          return Block(
+                            blockId: feedItem['id'] ?? '',
+                            blockText: feedItem['content'] ?? '',
+                            title: feedItem['title'] ?? '',
+                            address: feedItem['address'] ?? '',
+                            name:
+                                '${feedItem['first_name']} ${feedItem['last_name']}' ?? '',
+                            username: feedItem['username'] ?? '',
+                            upvotes: feedItem['upvotes'] ?? 0,
+                            downvotes: feedItem['downvotes'] ?? 0,
+                            conversations: feedItem['number_of_comments'] ?? 69,
+                            imageUrl:
+                                'assets/images/default_avatar.png',
+                          );
+                        },
+                      ),
                     ),
-                  ),
                   Navbar(selectedIndex: 0),
                 ],
               ),

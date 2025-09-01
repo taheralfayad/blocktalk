@@ -8,6 +8,8 @@ import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import '../design-system/pill.dart';
 import '../design-system/vote_button.dart';
+import '../design-system/textfield.dart';
+import '../design-system/dropdown_button.dart';
 
 import '../components/navbar.dart';
 import '../components/contributers_circle.dart';
@@ -31,11 +33,16 @@ class _EntryPageState extends State<EntryPage> {
   int _upvotes = 0;
   int _downvotes = 0;
   String _userInteraction = "";
-  List<String> _tags = [];
+  List<dynamic> _tags = [];
   String _selectedClassification = 'Opinion';
-  List<dynamic> _comments = [];
+  List<dynamic>? _comments = [];
+  List<String> _allAvailableTags = [];
+  bool _editMode = false;
+  String _selectedTag = "";
 
   final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _entryEditController = TextEditingController();
+  final TextEditingController _entryTitleController = TextEditingController();
 
   Future<void> voteEntry(String interactionType) async {
     const backendUrl = String.fromEnvironment(
@@ -103,12 +110,13 @@ class _EntryPageState extends State<EntryPage> {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> entryData = jsonDecode(response.body);
+      print(entryData);
       setState(() {
         _title = entryData['title'] ?? '';
         _content = entryData['content'] ?? '';
         _upvotes = entryData['upvotes'] ?? 0;
+        _tags = entryData['tags']?? [];
         _downvotes = entryData['downvotes'] ?? 0;
-        _tags = List<String>.from(entryData['tags'] ?? []);
         _userInteraction = entryData['user_interaction'] ?? '';
       });
     } else {
@@ -183,13 +191,50 @@ class _EntryPageState extends State<EntryPage> {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> commentsData = jsonDecode(response.body);
+      print(response.body);
+      final List<dynamic>? commentsData = jsonDecode(response.body);
       setState(() {
         _comments = commentsData;
       });
     } else {
       throw Exception('Failed to load comments');
     }
+  }
+
+  Future<void> _retrieveAllTags() async {
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:3000',
+    );
+
+
+    final response = await http.get(
+      Uri.parse('$backendUrl/retrieve-tags'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> tagsData = jsonDecode(response.body);
+
+      print(tagsData);
+
+      List<String> tags = [];
+
+
+      for (int i = 0; i < tagsData.length; i++) {
+          tags.add(tagsData[i]["name"]);
+      }
+
+      setState(() {
+        _allAvailableTags = tags;
+      });
+    }
+    
+  }
+
+  void _setSelectedTag(value) {
+    setState(() {
+      _selectedTag = value;
+    });
   }
 
   void initState() {
@@ -221,28 +266,78 @@ class _EntryPageState extends State<EntryPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ContributorsCircle(),
-                          BlockTalkText(
-                            text: "15 Contributors",
-                            fontSize: 14.0,
+                          Row(
+                            children: [
+                              ContributorsCircle(),
+                              BlockTalkText(
+                                text: "15 Contributors",
+                                fontSize: 14.0,
+                              ),
+                            ]
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              if (_allAvailableTags.isEmpty){
+                                _retrieveAllTags();
+                              } 
+                              setState(() {
+                                _editMode = !_editMode;
+                                _entryEditController.text = _content;
+                                _entryTitleController.text = _title;
+                              });
+                           },
+                            icon: const Icon(Icons.edit),
+                            color: AppColors.primaryButtonColor,
                           ),
                         ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                      if (_editMode) 
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ..._tags.map((tag) => BlockTalkPill(text: tag)),
+                            SizedBox(height: 12),
+                            BlockTalkDropdownButton(
+                              items: _allAvailableTags,
+                              onChanged: (value) {
+                                _setSelectedTag(value);
+                              },
+                              initialValue: _allAvailableTags[0]
+                            ),
+                            SizedBox(height: 8),
+                            BlockTalkTextField(
+                              controller: _entryTitleController,
+                              labelText: "Edit your title",
+                              maxLines: 1,
+                            ),
+                            SizedBox(height: 8),
+                            BlockTalkTextField(
+                              controller: _entryEditController,
+                              labelText: "Edit your content",
+                              maxLines: 15,
+                            ),
+                          ]
+                        )
+                      else 
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  ..._tags.map((tag) => BlockTalkPill(text: tag["name"]!)),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 12),
+                            BlockTalkText(text: _title, fontSize: 24.0),
+                            SizedBox(height: 8),
+                            BlockTalkText(text: _content, fontSize: 16.0),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      BlockTalkText(text: _title, fontSize: 24.0),
-                      SizedBox(height: 8),
-                      BlockTalkText(text: _content, fontSize: 16.0),
                       SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -286,10 +381,10 @@ class _EntryPageState extends State<EntryPage> {
                       ),
                       ListView.builder(
                           shrinkWrap: true,
-                          itemCount: _comments.length,
+                          itemCount: _comments?.length ?? 0,
                           physics: NeverScrollableScrollPhysics(),
                           itemBuilder: (context, index) {
-                            final comment = _comments[index];
+                            final comment = _comments?[index];
                             return Comment(
                               id: comment['id'] ?? 0,
                               entryId: int.parse(widget.blockId ?? '-1'),

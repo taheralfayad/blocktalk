@@ -5,6 +5,7 @@ class BlockTalkTextField extends StatelessWidget {
   final String labelText;
   final bool obscureText;
   final Widget? suffixIcon;
+  final int? maxLines;
 
   const BlockTalkTextField({
     super.key,
@@ -12,6 +13,7 @@ class BlockTalkTextField extends StatelessWidget {
     required this.labelText,
     this.obscureText = false,
     this.suffixIcon,
+    this.maxLines = 1,
   });
 
   @override
@@ -23,8 +25,9 @@ class BlockTalkTextField extends StatelessWidget {
         labelText: labelText,
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-        suffixIcon: suffixIcon,
+        suffixIcon: suffixIcon
       ),
+      maxLines: maxLines,
     );
   }
 }

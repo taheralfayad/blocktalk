@@ -10,7 +10,10 @@ import '../design-system/button.dart';
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import "../design-system/dropdown_textfield.dart";
+
 import '../components/navbar.dart';
+import '../components/tags_list.dart';
+
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
@@ -74,12 +77,15 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     });
   }
 
-  final List<String> _selectedTags = [];
-  final List<String> _availableTags = [
+  final List<Map<String, String>> _selectedTags = [];
+  final List<String> _availableZoningTags = [
     'Single Family',
     'Multi Family',
     'Commercial',
     'Industrial',
+  ];
+
+  final List<String> _availableProgressTags = [
     'Construction Started',
     'Construction Completed',
     'Lot For Sale',
@@ -284,17 +290,25 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     }
   }
 
-  void _addTag(String tag) {
-    if (tag.isNotEmpty && !_selectedTags.contains(tag)) {
-      setState(() {
-        _selectedTags.add(tag);
-      });
-    }
+  void _removeTag(String tagName) {
+    setState(() {
+      _selectedTags.removeWhere((tag) => tag["name"] == tagName);
+    });
   }
 
-  void _removeTag(String tag) {
+  bool _containsTag(String tagName) {
+    return _selectedTags.any((tag) => tag["name"] == tagName); 
+  }
+
+  void tagsOnSelected(bool selected, String tagName, String classification) {
     setState(() {
-      _selectedTags.remove(tag);
+      if (selected) {
+        _selectedTags.add({'name': tagName, 'classification': classification});
+        _selectedTags.removeWhere((tag) => tag["name"] != tagName && tag["classification"] == classification);
+      }
+      else {
+        _removeTag(tagName);
+      }
     });
   }
 
@@ -319,30 +333,32 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                     width: double.maxFinite,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Wrap(
-                          spacing: 8.0,
-                          runSpacing: 4.0,
-                          children: _availableTags.map((tag) {
-                            return FilterChip(
-                              backgroundColor: Colors.white,
-                              label: Text(tag),
-                              selected: _selectedTags.contains(tag),
-                              selectedColor: AppColors.primaryButtonColor
-                                  .withOpacity(0.3),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _selectedTags.add(tag);
-                                  } else {
-                                    _selectedTags.remove(tag);
-                                  }
-                                });
-                                setStateDialog(() {});
-                              },
-                            );
-                          }).toList(),
+                        BlockTalkText(
+                          text: "Zoning Tags",
                         ),
+                        TagsList(
+                          tags: _availableZoningTags,
+                          onSelected: (selected, tagName, classification) {
+                            tagsOnSelected(selected, tagName, classification);
+                            setStateDialog(() {});
+                          },
+                          selectedTagsContainsTag: _containsTag,
+                          classification: "Zoning"
+                        ),
+                        BlockTalkText(
+                          text: "Progress Tags"
+                        ),
+                        TagsList(
+                          tags: _availableProgressTags,
+                          onSelected: (selected, tagName, classification) {
+                            tagsOnSelected(selected, tagName, classification);
+                            setStateDialog(() {});
+                          },
+                          selectedTagsContainsTag: _containsTag,
+                          classification: "Progress"
+                        )
                       ],
                     ),
                   ),
@@ -530,7 +546,7 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      tag,
+                                      tag["name"]!,
                                       style: TextStyle(
                                         color: AppColors.primaryButtonColor,
                                         fontSize: 14,
@@ -539,7 +555,11 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                                     ),
                                     SizedBox(width: 4),
                                     GestureDetector(
-                                      onTap: () => _removeTag(tag),
+                                      onTap: () {
+                                        if (tag["name"] != null) {
+                                          _removeTag(tag["name"]!);
+                                        }
+                                      },
                                       child: Icon(
                                         Icons.close,
                                         size: 16,
