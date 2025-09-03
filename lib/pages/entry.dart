@@ -328,7 +328,12 @@ class _EntryPageState extends State<EntryPage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  ..._tags.map((tag) => BlockTalkPill(text: tag["name"]!)),
+                                  ..._tags.map((tag) => 
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                      child: BlockTalkPill(text: tag["name"]!, classification: tag["classification"])
+                                    )
+                                  ),
                                 ],
                               ),
                             ),
