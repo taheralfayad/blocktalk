@@ -3,17 +3,15 @@ import 'package:flutter/material.dart';
 import '../design-system/colors.dart';
 
 class TagsList extends StatelessWidget {
-  final List<String> tags;
+  final List<Map<String,String>> tags;
   final Function(bool, String, String)? onSelected;
   final bool Function(String)? selectedTagsContainsTag;
-  final String classification;
 
   const TagsList({
     super.key,
     required this.tags,
     required this.onSelected,
     required this.selectedTagsContainsTag,
-    required this.classification
   });
 
   @override
@@ -24,10 +22,10 @@ class TagsList extends StatelessWidget {
       children: tags.map((tag) {
         return FilterChip(
           backgroundColor: Colors.white,
-          label: Text(tag),
-          selected: selectedTagsContainsTag?.call(tag) ?? false,
+          label: Text(tag["name"]!),
+          selected: selectedTagsContainsTag?.call(tag["name"]!) ?? false,
           selectedColor: AppColors.primaryButtonColor.withOpacity(0.3),
-          onSelected: (selected) => onSelected!(selected, tag, classification)
+          onSelected: (selected) => onSelected!(selected, tag["name"]!, tag["classification"]!)
         );
       }).toList(),
     );

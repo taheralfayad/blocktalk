@@ -18,6 +18,8 @@ import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
 
+import '../globals.dart' as globals;
+
 class AddEntryPage extends ConsumerStatefulWidget {
   final String? latitude;
   final String? longitude;
@@ -78,19 +80,6 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
   }
 
   final List<Map<String, String>> _selectedTags = [];
-  final List<String> _availableZoningTags = [
-    'Single Family',
-    'Multi Family',
-    'Commercial',
-    'Industrial',
-  ];
-
-  final List<String> _availableProgressTags = [
-    'Construction Started',
-    'Construction Completed',
-    'Lot For Sale',
-    'Lot Sold',
-  ];
 
   Future<void> _fetchSuggestions(String query) async {
     const backendUrl = String.fromEnvironment(
@@ -213,59 +202,6 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
     });
   }
 
-  Future<String> _determinePositionAndAddress() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Check if location services are enabled
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    // Check and request permission
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-        'Location permissions are permanently denied, we cannot request permissions.',
-      );
-    }
-
-    // Get current position
-    Position position = await Geolocator.getCurrentPosition();
-
-    _setCurrentPosition(position);
-
-    // Reverse geocoding
-    List<Placemark> placemarks = await placemarkFromCoordinates(
-      position.latitude,
-      position.longitude,
-    );
-
-    Placemark place = placemarks[0];
-
-    // Create a readable address
-    String address =
-        '${place.street}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
-
-    return address;
-  }
-
-  // If someone backspaces the location input, we need to reset the suggestions
-  void _resetLocationController() {
-    _locationController.clear();
-    _lastProcessedLength = 0;
-    _addressSuggestions.clear();
-    _suggestions.clear();
-  }
-
   // This function finds the coordinates from the address suggestions
   void _setCoordinatesFromAddress(String address) {
     for (var suggestion in _addressSuggestions) {
@@ -339,25 +275,23 @@ class _AddEntryPageState extends ConsumerState<AddEntryPage> {
                           text: "Zoning Tags",
                         ),
                         TagsList(
-                          tags: _availableZoningTags,
+                          tags: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').toList() ,
                           onSelected: (selected, tagName, classification) {
                             tagsOnSelected(selected, tagName, classification);
                             setStateDialog(() {});
                           },
                           selectedTagsContainsTag: _containsTag,
-                          classification: "Zoning"
                         ),
                         BlockTalkText(
                           text: "Progress Tags"
                         ),
                         TagsList(
-                          tags: _availableProgressTags,
+                          tags: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').toList(),
                           onSelected: (selected, tagName, classification) {
                             tagsOnSelected(selected, tagName, classification);
                             setStateDialog(() {});
                           },
                           selectedTagsContainsTag: _containsTag,
-                          classification: "Progress"
                         )
                       ],
                     ),

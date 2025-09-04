@@ -19,6 +19,8 @@ import '../components/add_comment.dart';
 
 import '../services/auth_service.dart';
 
+import '../globals.dart' as globals;
+
 class EntryPage extends StatefulWidget {
   final String? blockId;
   const EntryPage({super.key, this.blockId});
@@ -36,7 +38,6 @@ class _EntryPageState extends State<EntryPage> {
   List<dynamic> _tags = [];
   String _selectedClassification = 'Opinion';
   List<dynamic>? _comments = [];
-  List<String> _allAvailableTags = [];
   bool _editMode = false;
   String _selectedTag = "";
 
@@ -201,36 +202,6 @@ class _EntryPageState extends State<EntryPage> {
     }
   }
 
-  Future<void> _retrieveAllTags() async {
-    const backendUrl = String.fromEnvironment(
-      'BACKEND_URL',
-      defaultValue: 'http://localhost:3000',
-    );
-
-
-    final response = await http.get(
-      Uri.parse('$backendUrl/retrieve-tags'),
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> tagsData = jsonDecode(response.body);
-
-      print(tagsData);
-
-      List<String> tags = [];
-
-
-      for (int i = 0; i < tagsData.length; i++) {
-          tags.add(tagsData[i]["name"]);
-      }
-
-      setState(() {
-        _allAvailableTags = tags;
-      });
-    }
-    
-  }
-
   void _setSelectedTag(value) {
     setState(() {
       _selectedTag = value;
@@ -279,9 +250,6 @@ class _EntryPageState extends State<EntryPage> {
                           ),
                           IconButton(
                             onPressed: () {
-                              if (_allAvailableTags.isEmpty){
-                                _retrieveAllTags();
-                              } 
                               setState(() {
                                 _editMode = !_editMode;
                                 _entryEditController.text = _content;
@@ -299,11 +267,19 @@ class _EntryPageState extends State<EntryPage> {
                           children: [
                             SizedBox(height: 12),
                             BlockTalkDropdownButton(
-                              items: _allAvailableTags,
+                              items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').map((tag) => tag["name"].toString()).toList(),
                               onChanged: (value) {
                                 _setSelectedTag(value);
                               },
-                              initialValue: _allAvailableTags[0]
+                              initialValue: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').map((tag) => tag["name"].toString()).toList()[0]
+                            ),
+                            SizedBox(height: 8),
+                            BlockTalkDropdownButton(
+                              items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').map((tag) => tag["name"].toString()).toList(), 
+                              onChanged: (value) {
+                                _setSelectedTag(value);
+                              },
+                              initialValue: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').map((tag) => tag["name"].toString()).toList()[0]
                             ),
                             SizedBox(height: 8),
                             BlockTalkTextField(
