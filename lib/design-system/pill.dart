@@ -27,9 +27,9 @@ class BlockTalkPill extends StatelessWidget {
   String _getPillText() {
     switch (classification) {
       case 'Zoning':
-        return '🏘️' + text;
+        return '🏘️$text';
       case 'Progress':
-        return '🏗️' + text;
+        return '🏗️$text';
       default:
         return text;
     }

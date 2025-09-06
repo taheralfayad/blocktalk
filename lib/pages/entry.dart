@@ -10,6 +10,7 @@ import '../design-system/pill.dart';
 import '../design-system/vote_button.dart';
 import '../design-system/textfield.dart';
 import '../design-system/dropdown_button.dart';
+import '../design-system/button.dart';
 
 import '../components/navbar.dart';
 import '../components/contributers_circle.dart';
@@ -35,14 +36,14 @@ class _EntryPageState extends State<EntryPage> {
   int _upvotes = 0;
   int _downvotes = 0;
   String _userInteraction = "";
-  List<dynamic> _tags = [];
+  List<Map<String, String>> _tags = [];
   String _selectedClassification = 'Opinion';
   List<dynamic>? _comments = [];
   bool _editMode = false;
-  String _selectedTag = "";
+  List<Map<String, String>> _selectedTags = [];
 
   final TextEditingController _commentController = TextEditingController();
-  final TextEditingController _entryEditController = TextEditingController();
+  final TextEditingController _entryContentController = TextEditingController();
   final TextEditingController _entryTitleController = TextEditingController();
 
   Future<void> voteEntry(String interactionType) async {
@@ -116,9 +117,16 @@ class _EntryPageState extends State<EntryPage> {
         _title = entryData['title'] ?? '';
         _content = entryData['content'] ?? '';
         _upvotes = entryData['upvotes'] ?? 0;
-        _tags = entryData['tags']?? [];
+        _tags = (entryData["tags"] as List)
+            .map((e) => Map<String, String>.from(e as Map))
+            .toList();
         _downvotes = entryData['downvotes'] ?? 0;
         _userInteraction = entryData['user_interaction'] ?? '';
+        
+        // Set the edit state variables as the original entry's information
+        _entryTitleController.text = _title;
+        _entryContentController.text = _content;
+        _selectedTags = List<Map<String, String>>.from(_tags);
       });
     } else {
       throw Exception('Failed to load entry');
@@ -202,9 +210,14 @@ class _EntryPageState extends State<EntryPage> {
     }
   }
 
-  void _setSelectedTag(value) {
+  void _onSelectedTag(value) {
     setState(() {
-      _selectedTag = value;
+       Map<String, String> tag = globals.blockTalkTags.firstWhere((t) => t["name"] == value);
+
+       _selectedTags.add(tag);
+       _selectedTags.removeWhere((t) => t["name"] != tag["name"] && t["classification"] == tag["classification"]);
+
+       print(_selectedTags);
     });
   }
 
@@ -215,6 +228,66 @@ class _EntryPageState extends State<EntryPage> {
 
     _retrieveEntry();
     _retrieveComments();
+
+
+  }
+
+  Future<void> _editEntry() async {
+    String newTitle = _entryTitleController.text.trim();
+    String newContent = _entryContentController.text.trim();
+
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:3000',
+    );
+
+    if (newTitle.isEmpty || newContent.isEmpty || _selectedTags.isEmpty) {
+      print(newTitle);
+      print(newContent);
+      print(_selectedTags);
+
+      ScaffoldMessenger.of(
+        context
+      ).showSnackBar(SnackBar(content: Text('')));
+    }
+
+    print("EDITED CONTENT:");
+    print(newTitle);
+    print(newContent);
+    print(_selectedTags);
+
+
+    Uri url = Uri.parse('$backendUrl/edit-entry');
+
+    final entryData = {
+      'newTitle': newTitle,
+      'newContent': newContent,
+      'newTags': _selectedTags
+    };
+
+    AuthService authService = AuthService();
+    String? accessToken = await authService.getAccessToken();
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': accessToken.toString()
+      },
+      body: json.encode(entryData)
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(
+        context
+      ).showSnackBar(SnackBar(content: Text('Successfully edited entry')));
+
+      setState(() {
+        _editMode = false;
+      });
+
+    }
+
   }
 
   @override
@@ -252,7 +325,7 @@ class _EntryPageState extends State<EntryPage> {
                             onPressed: () {
                               setState(() {
                                 _editMode = !_editMode;
-                                _entryEditController.text = _content;
+                                _entryContentController.text = _content;
                                 _entryTitleController.text = _title;
                               });
                            },
@@ -269,30 +342,42 @@ class _EntryPageState extends State<EntryPage> {
                             BlockTalkDropdownButton(
                               items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').map((tag) => tag["name"].toString()).toList(),
                               onChanged: (value) {
-                                _setSelectedTag(value);
+                                _onSelectedTag(value);
                               },
-                              initialValue: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').map((tag) => tag["name"].toString()).toList()[0]
+                              initialValue: _tags
+                                  .firstWhere((tag) => tag["classification"] == 'Zoning')["name"]
+                                  .toString(),
+                              title: "Select Zoning Tag"
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: 12),
                             BlockTalkDropdownButton(
                               items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').map((tag) => tag["name"].toString()).toList(), 
                               onChanged: (value) {
-                                _setSelectedTag(value);
+                                _onSelectedTag(value);
                               },
-                              initialValue: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').map((tag) => tag["name"].toString()).toList()[0]
+                              initialValue: _tags
+                                  .firstWhere((tag) => tag["classification"] == 'Progress')["name"]
+                                  .toString(),
+                              title: "Select Progress Tag"
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: 12),
                             BlockTalkTextField(
                               controller: _entryTitleController,
                               labelText: "Edit your title",
                               maxLines: 1,
                             ),
-                            SizedBox(height: 8),
+                            SizedBox(height: 12),
                             BlockTalkTextField(
-                              controller: _entryEditController,
+                              controller: _entryContentController,
                               labelText: "Edit your content",
                               maxLines: 15,
                             ),
+                            SizedBox(height: 12),
+                            BlockTalkButton(
+                              text: "Edit Entry Content",
+                              type: "outline",
+                              onPressed: () => {_editEntry()}
+                            ) 
                           ]
                         )
                       else 
@@ -307,7 +392,7 @@ class _EntryPageState extends State<EntryPage> {
                                   ..._tags.map((tag) => 
                                     Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                                      child: BlockTalkPill(text: tag["name"]!, classification: tag["classification"])
+                                      child: BlockTalkPill(text: tag["name"]!, classification: tag["classification"]!)
                                     )
                                   ),
                                 ],
@@ -344,7 +429,7 @@ class _EntryPageState extends State<EntryPage> {
                         ],
                       ),
                       BlockTalkBanner(text: "Conversation"),
-                      SizedBox(height: 8),
+                      SizedBox(height: 12),
                       AddComment(
                         commentController: _commentController,
                         onSubmit: (comment, classification) {

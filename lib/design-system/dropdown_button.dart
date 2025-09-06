@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-
 import './text.dart';
 
 class BlockTalkDropdownButton extends StatefulWidget {
   final List<String> items;
   final Function(String)? onChanged;
   final String? initialValue;
+  final String? title;
 
   const BlockTalkDropdownButton({
     super.key,
     required this.items,
     required this.onChanged,
     required this.initialValue,
+    this.title,
   });
 
   @override
- _BlockTalkDropdownButtonState createState() => _BlockTalkDropdownButtonState();
+  _BlockTalkDropdownButtonState createState() =>
+      _BlockTalkDropdownButtonState();
 }
 
 class _BlockTalkDropdownButtonState extends State<BlockTalkDropdownButton> {
@@ -31,7 +33,6 @@ class _BlockTalkDropdownButtonState extends State<BlockTalkDropdownButton> {
 
   void setCurrentChoice(String? value) {
     if (value == null || value.isEmpty) return;
-
     setState(() {
       _currentChoice = value;
     });
@@ -40,24 +41,30 @@ class _BlockTalkDropdownButtonState extends State<BlockTalkDropdownButton> {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton(
-      alignment: Alignment.center,
-      isExpanded: true,
+    return DropdownButtonFormField<String>(
       value: _currentChoice,
-      style: const TextStyle(
-        color: Colors.black,
-        fontSize: 16.0,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: widget.title,
+        filled: true,
+        fillColor: Colors.white,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+        ),
       ),
+      icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
+      style: const TextStyle(color: Colors.black, fontSize: 16.0),
       dropdownColor: Colors.white,
       items: widget.items
           .map<DropdownMenuItem<String>>(
-              (String item) => DropdownMenuItem<String>(
-                    value: item,
-                    child: BlockTalkText(text: item),
-                  ))
+            (String item) => DropdownMenuItem<String>(
+              value: item,
+              child: BlockTalkText(text: item)
+            ),
+          )
           .toList(),
-      onChanged: (String? value) =>
-        setCurrentChoice(value)
+      onChanged: setCurrentChoice,
     );
   }
 }
