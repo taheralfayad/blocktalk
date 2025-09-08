@@ -262,7 +262,8 @@ class _EntryPageState extends State<EntryPage> {
     final entryData = {
       'newTitle': newTitle,
       'newContent': newContent,
-      'newTags': _selectedTags
+      'newTags': _selectedTags,
+      "entryId": int.parse(widget.blockId!)
     };
 
     AuthService authService = AuthService();
@@ -283,6 +284,7 @@ class _EntryPageState extends State<EntryPage> {
       ).showSnackBar(SnackBar(content: Text('Successfully edited entry')));
 
       setState(() {
+        _retrieveEntry();
         _editMode = false;
       });
 
