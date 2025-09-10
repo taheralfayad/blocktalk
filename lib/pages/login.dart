@@ -38,8 +38,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Color _notificationColor = Colors.red;
 
 
-  bool _obscurePassword = true; // Add this to your _LoginPageState
-
+  bool _obscurePassword = true;
 
   Future<void> _login(isAuthenticated) async {
 
@@ -194,7 +193,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 obscureText: _obscurePassword,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
                   ),
                   onPressed: () {
                     setState(() => _obscurePassword = !_obscurePassword);

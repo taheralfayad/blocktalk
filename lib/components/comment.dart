@@ -19,6 +19,7 @@ class Comment extends StatefulWidget {
   final String author;
   final String classification;
   final String avatarUrl;
+  final bool addCommentIsDisabled;
 
   const Comment({
     super.key,
@@ -27,6 +28,7 @@ class Comment extends StatefulWidget {
     required this.entryId,
     required this.author,
     required this.classification,
+    required this.addCommentIsDisabled,
     this.avatarUrl = 'assets/avatar.jpg',
     this.parentId,
     this.numOfReplies = 0,
@@ -68,6 +70,7 @@ class _CommentState extends State<Comment> {
           author: reply['username'],
           classification: reply['type'],
           numOfReplies: reply['num_of_replies'] ?? 0,
+          addCommentIsDisabled: widget.addCommentIsDisabled
         )).toList();
 
         _repliesCount = replies.length;
@@ -120,6 +123,7 @@ class _CommentState extends State<Comment> {
         avatarUrl: widget.avatarUrl,
         entryId: data['entry_id'],
         numOfReplies: data['num_of_replies'] ?? 0,
+        addCommentIsDisabled: widget.addCommentIsDisabled 
       );
 
       setState(() {
@@ -247,6 +251,7 @@ class _CommentState extends State<Comment> {
                         avatarUrl: reply.avatarUrl,
                         entryId: widget.entryId,
                         numOfReplies: reply.numOfReplies,
+                        addCommentIsDisabled : widget.addCommentIsDisabled
                       )
                     ),
                   ],
@@ -265,6 +270,7 @@ class _CommentState extends State<Comment> {
                   _addReplyIsExpanded = false;
                 });
               },
+              disabled: widget.addCommentIsDisabled
             )
         ]
       )

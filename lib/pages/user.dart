@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../components/navbar.dart';
 import '../components/block.dart';
@@ -10,16 +11,17 @@ import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import '../design-system/button.dart';
 
+import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
-class UserPage extends StatefulWidget {
+class UserPage extends ConsumerStatefulWidget {
   const UserPage({super.key});
 
   @override
-  State<UserPage> createState() => _UserPageState();
+  ConsumerState<UserPage> createState() => _UserPageState();
 }
 
-class _UserPageState extends State<UserPage> {
+class _UserPageState extends ConsumerState<UserPage> {
 
   List<Widget> _buildBlockCarouselItems() {
     return [
@@ -161,6 +163,7 @@ Widget build(BuildContext context) {
                         type: "solid",
                         onPressed: () {
                           AuthService().logOut();
+                          ref.read(isAuthenticatedProvider.notifier).state = false;
                           context.go('/login');
                         }
                       )

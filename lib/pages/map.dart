@@ -74,7 +74,6 @@ class _MapPageState extends ConsumerState<MapPage> {
 
   void _retrieveEntriesWithinBounds() async {
     AuthService authService = AuthService();
-    String? accessToken = await authService.getAccessToken();
 
     const backendUrl = String.fromEnvironment(
       'BACKEND_URL',
@@ -94,7 +93,6 @@ class _MapPageState extends ConsumerState<MapPage> {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': accessToken.toString(),
       },
       body: json.encode(bounds),
     );

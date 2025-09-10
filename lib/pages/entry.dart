@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
@@ -18,19 +19,20 @@ import '../components/banner.dart';
 import '../components/comment.dart';
 import '../components/add_comment.dart';
 
+import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
 
 import '../globals.dart' as globals;
 
-class EntryPage extends StatefulWidget {
+class EntryPage extends ConsumerStatefulWidget {
   final String? blockId;
   const EntryPage({super.key, this.blockId});
 
   @override
-  State<EntryPage> createState() => _EntryPageState();
+  ConsumerState<EntryPage> createState() => _EntryPageState();
 }
 
-class _EntryPageState extends State<EntryPage> {
+class _EntryPageState extends ConsumerState<EntryPage> {
   String _content = "";
   String _title = "";
   int _upvotes = 0;
@@ -294,6 +296,8 @@ class _EntryPageState extends State<EntryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAuthenticated = ref.watch(isAuthenticatedProvider);
+
     return Container(
       decoration: const BoxDecoration(gradient: AppColors.backgroundColor),
       child: Scaffold(
@@ -323,17 +327,18 @@ class _EntryPageState extends State<EntryPage> {
                               ),
                             ]
                           ),
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _editMode = !_editMode;
-                                _entryContentController.text = _content;
-                                _entryTitleController.text = _title;
-                              });
-                           },
-                            icon: const Icon(Icons.edit),
-                            color: AppColors.primaryButtonColor,
-                          ),
+                          if (isAuthenticated)
+                            IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  _editMode = !_editMode;
+                                  _entryContentController.text = _content;
+                                  _entryTitleController.text = _title;
+                                });
+                            },
+                              icon: const Icon(Icons.edit),
+                              color: AppColors.primaryButtonColor,
+                            ),
                         ],
                       ),
                       if (_editMode) 
@@ -446,6 +451,7 @@ class _EntryPageState extends State<EntryPage> {
                             _selectedClassification = value;
                           });
                         },
+                        disabled: !isAuthenticated,
                       ),
                       ListView.builder(
                           shrinkWrap: true,
@@ -461,6 +467,7 @@ class _EntryPageState extends State<EntryPage> {
                               text: comment['context'] ?? '',
                               classification: comment['type'] ?? 'opinion',
                               numOfReplies: comment['num_of_replies'] ?? 0,
+                              addCommentIsDisabled: !isAuthenticated
                             );
                           },
                         ),

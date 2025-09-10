@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../design-system/button.dart';
 import '../design-system/colors.dart';
 import '../design-system/dropdown_button.dart';
+import '../design-system/text.dart';
 
 class AddComment extends StatefulWidget {
   final String avatarUrl;
@@ -12,6 +13,7 @@ class AddComment extends StatefulWidget {
   final TextEditingController commentController;
   final String initialClassification;
   final Function(String)? onClassificationChanged;
+  final bool disabled;
 
   const AddComment({
     super.key,
@@ -22,6 +24,7 @@ class AddComment extends StatefulWidget {
     required this.commentController,
     this.initialClassification = 'Opinion',
     this.onClassificationChanged,
+    required this.disabled,
   });
 
   @override
@@ -35,98 +38,128 @@ class _AddCommentState extends State<AddComment> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 200.0),
-      padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8.0),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.blockColor.withOpacity(0.5),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3), // changes position of shadow
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: 200),
+      child: Stack(
         children: [
-          Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                child: CircleAvatar(
-                  radius: 20.0,
-                  backgroundImage: AssetImage(widget.avatarUrl),
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200.0),
+            padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.blockColor.withOpacity(0.5),
+                  spreadRadius: 1,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3), // changes position of shadow
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
+                      child: CircleAvatar(
+                        radius: 20.0,
+                        backgroundImage: AssetImage(widget.avatarUrl),
+                      ),
+                    ),
+                    Flexible(
+                      child: TextField(
+                        onTapOutside: (event) {
+                          FocusScope.of(context).requestFocus(FocusNode());
+                        },
+                        autofocus: false,
+                        autocorrect: false,
+                        controller: widget.commentController,
+                        minLines: 1,
+                        maxLength: 200,
+                        maxLines: 4,
+                        keyboardType: TextInputType.multiline,
+                        decoration: InputDecoration(
+                          hintText: widget.placeholderText,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (widget.withClassification)
+                      SizedBox(
+                        width: 120,
+                        height: 40,
+                        child: BlockTalkDropdownButton(
+                          initialValue: widget.initialClassification,
+                          items: items,
+                          onChanged: (String? value) {
+                            if (value != null && value.isNotEmpty) {
+                              setState(() {
+                                _selectedClassification = value;
+                              });
+                              widget.onClassificationChanged?.call(value);
+                            }
+                          },
+                        ),
+                      ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: BlockTalkButton(
+                        text: 'Submit',
+                        type: "outline",
+                        onPressed: () {
+                          if (widget.commentController.text.isNotEmpty) {
+                            if (widget.onSubmit != null) {
+                              widget.onSubmit!(
+                                widget.commentController.text,
+                                _selectedClassification,
+                              );
+                            }
+                            widget.commentController.clear();
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (widget.disabled)
+            Positioned.fill(
+              child: Container(
+                color: Colors.grey.withOpacity(0.96), // semi-transparent grey
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.apartment,
+                        size: 56,
+                        color: Colors.white
+                      ),
+                      BlockTalkText(
+                        text: "Log in to be able to contribute!",
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      )
+                    ]
+                  )
                 ),
               ),
-              Flexible(
-                child: TextField(
-                  onTapOutside: (event) {
-                    FocusScope.of(context).requestFocus(FocusNode());
-                  },
-                  autofocus: false,
-                  autocorrect: false,
-                  controller: widget.commentController,
-                  minLines: 1,
-                  maxLength: 200,
-                  maxLines: 4,
-                  keyboardType: TextInputType.multiline,
-                  decoration: InputDecoration(
-                    hintText: widget.placeholderText,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              )
-            ],
-          ),
-          SizedBox(height: 8.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (widget.withClassification)
-                SizedBox(
-                  width: 120,
-                  height: 40,
-                  child: BlockTalkDropdownButton(
-                    initialValue: widget.initialClassification,
-                    items: items,
-                    onChanged: (String? value) {
-                      if (value != null && value.isNotEmpty) {
-                        setState(() {
-                          _selectedClassification = value;
-                        });
-                        widget.onClassificationChanged?.call(value);
-                      }
-                    },
-                  ),
-                ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: BlockTalkButton(
-                  text: 'Submit',
-                  type: "outline",
-                  onPressed: () {
-                    if (widget.commentController.text.isNotEmpty) {
-                      if (widget.onSubmit != null) {
-                        widget.onSubmit!(
-                          widget.commentController.text,
-                          _selectedClassification,
-                        );
-                      }
-                      widget.commentController.clear();
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
