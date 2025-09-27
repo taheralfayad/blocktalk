@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../design-system/text.dart';
+import '../design-system/blockquote.dart';
 
 import '../components/add_comment.dart';
 
@@ -19,6 +20,7 @@ class Comment extends StatefulWidget {
   final String author;
   final String classification;
   final String avatarUrl;
+  final String? textToImprove; // only if the classification is "Improvement"
   final bool addCommentIsDisabled;
 
   const Comment({
@@ -30,6 +32,7 @@ class Comment extends StatefulWidget {
     required this.classification,
     required this.addCommentIsDisabled,
     this.avatarUrl = 'assets/avatar.jpg',
+    this.textToImprove,
     this.parentId,
     this.numOfReplies = 0,
   });
@@ -257,6 +260,11 @@ class _CommentState extends State<Comment> {
                   ],
                   )
               )
+            ),
+          if (widget.classification == 'improvement')
+            Blockquote(
+              headerText: "Suggested improvement for: ",
+              quoteText: widget.textToImprove,
             ),
           if (widget.classification == 'opinion' && _addReplyIsExpanded)
             AddComment(

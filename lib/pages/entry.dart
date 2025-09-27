@@ -517,6 +517,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             text: comment['context'] ?? '',
                             classification: comment['type'] ?? 'opinion',
                             numOfReplies: comment['num_of_replies'] ?? 0,
+                            textToImprove: comment['text_to_improve'],
                             addCommentIsDisabled: !isAuthenticated,
                           );
                         },

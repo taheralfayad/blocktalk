@@ -4,6 +4,7 @@ import '../design-system/button.dart';
 import '../design-system/colors.dart';
 import '../design-system/dropdown_button.dart';
 import '../design-system/text.dart';
+import '../design-system/blockquote.dart';
 
 class AddComment extends StatefulWidget {
   final String avatarUrl;
@@ -103,33 +104,10 @@ class _AddCommentState extends State<AddComment> {
               if (widget.selectedClassification == "Improvement" &&
                   widget.highlightedText != null &&
                   widget.highlightedText!.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                  padding: const EdgeInsets.all(12.0),
-                  decoration: BoxDecoration(
-                    color: AppColors.blockColor.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(6.0),
-                    border: Border(
-                      left: BorderSide(
-                        color: AppColors.blockColor,
-                        width: 4.0,
-                      ),
-                    ),
+                  Blockquote(
+                    headerText: "You are suggesting improvements for:",
+                    quoteText: widget.highlightedText
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const BlockTalkText(
-                        text: "You are suggesting improvements for:",
-                        fontWeight: FontWeight.bold,
-                      ),
-                      const SizedBox(height: 6),
-                      BlockTalkText(
-                        text: "\"${widget.highlightedText}\"",
-                      ),
-                    ],
-                  ),
-                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

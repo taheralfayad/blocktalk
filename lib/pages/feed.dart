@@ -152,7 +152,6 @@ class _FeedPageState extends ConsumerState<FeedPage> {
         ),
       );
       if (response.statusCode == 200) {
-        print('Feed data fetched successfully: ${response.body}');
         final List<dynamic> feedData = jsonDecode(response.body);
         setState(() {
           _feedData = feedData;
