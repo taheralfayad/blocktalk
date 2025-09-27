@@ -11,9 +11,12 @@ class AddComment extends StatefulWidget {
   final bool withClassification;
   final Function(String, String)? onSubmit;
   final TextEditingController commentController;
-  final String initialClassification;
   final Function(String)? onClassificationChanged;
   final bool disabled;
+  final FocusNode? focusNode;
+  final String? selectedClassification;
+  final List<String>? commentClassifications;
+  final String? highlightedText;
 
   const AddComment({
     super.key,
@@ -22,9 +25,12 @@ class AddComment extends StatefulWidget {
     this.placeholderText = 'Add an opinion or provide a source...',
     this.onSubmit,
     required this.commentController,
-    this.initialClassification = 'Opinion',
     this.onClassificationChanged,
     required this.disabled,
+    this.focusNode,
+    this.selectedClassification,
+    this.commentClassifications,
+    this.highlightedText
   });
 
   @override
@@ -32,18 +38,39 @@ class AddComment extends StatefulWidget {
 }
 
 class _AddCommentState extends State<AddComment> {
-  String _selectedClassification = 'Opinion';
 
-  List<String> items = ['Opinion', 'Source'];
+  TextField _returnTextField() {
+    return TextField(
+      onTapOutside: (event) {
+        FocusScope.of(context).requestFocus(FocusNode());
+      },
+      autofocus: false,
+      autocorrect: false,
+      controller: widget.commentController,
+      minLines: 1,
+      maxLength: 200,
+      maxLines: 4,
+      keyboardType: TextInputType.multiline,
+      decoration: InputDecoration(
+        hintText: widget.placeholderText,
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        filled: false,
+        contentPadding: EdgeInsets.zero,
+      ),
+      focusNode: widget.focusNode,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: 200),
+      constraints: BoxConstraints(maxHeight: 300),
       child: Stack(
         children: [
           Container(
-            constraints: const BoxConstraints(maxHeight: 200.0),
+            constraints: const BoxConstraints(maxHeight: 300.0),
             padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -69,31 +96,40 @@ class _AddCommentState extends State<AddComment> {
                         backgroundImage: AssetImage(widget.avatarUrl),
                       ),
                     ),
-                    Flexible(
-                      child: TextField(
-                        onTapOutside: (event) {
-                          FocusScope.of(context).requestFocus(FocusNode());
-                        },
-                        autofocus: false,
-                        autocorrect: false,
-                        controller: widget.commentController,
-                        minLines: 1,
-                        maxLength: 200,
-                        maxLines: 4,
-                        keyboardType: TextInputType.multiline,
-                        decoration: InputDecoration(
-                          hintText: widget.placeholderText,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          filled: false,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                      ),
-                    ),
+                    Flexible(child: _returnTextField()),
                   ],
                 ),
                 SizedBox(height: 8.0),
+              if (widget.selectedClassification == "Improvement" &&
+                  widget.highlightedText != null &&
+                  widget.highlightedText!.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.blockColor.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(6.0),
+                    border: Border(
+                      left: BorderSide(
+                        color: AppColors.blockColor,
+                        width: 4.0,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const BlockTalkText(
+                        text: "You are suggesting improvements for:",
+                        fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 6),
+                      BlockTalkText(
+                        text: "\"${widget.highlightedText}\"",
+                      ),
+                    ],
+                  ),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -102,13 +138,10 @@ class _AddCommentState extends State<AddComment> {
                         width: 120,
                         height: 40,
                         child: BlockTalkDropdownButton(
-                          initialValue: widget.initialClassification,
-                          items: items,
+                          currentChoice: widget.selectedClassification,
+                          items: widget.commentClassifications!,
                           onChanged: (String? value) {
                             if (value != null && value.isNotEmpty) {
-                              setState(() {
-                                _selectedClassification = value;
-                              });
                               widget.onClassificationChanged?.call(value);
                             }
                           },
@@ -124,7 +157,7 @@ class _AddCommentState extends State<AddComment> {
                             if (widget.onSubmit != null) {
                               widget.onSubmit!(
                                 widget.commentController.text,
-                                _selectedClassification,
+                                widget.selectedClassification!,
                               );
                             }
                             widget.commentController.clear();
@@ -145,18 +178,14 @@ class _AddCommentState extends State<AddComment> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.apartment,
-                        size: 56,
-                        color: Colors.white
-                      ),
+                      Icon(Icons.apartment, size: 56, color: Colors.white),
                       BlockTalkText(
                         text: "Log in to be able to contribute!",
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                      )
-                    ]
-                  )
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

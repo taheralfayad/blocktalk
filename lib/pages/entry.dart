@@ -43,10 +43,13 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   List<dynamic>? _comments = [];
   bool _editMode = false;
   List<Map<String, String>> _selectedTags = [];
+  String? _highlightedImprovementText;
 
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _entryContentController = TextEditingController();
   final TextEditingController _entryTitleController = TextEditingController();
+
+  final FocusNode commentFocusNode = FocusNode();
 
   Future<void> voteEntry(String interactionType) async {
     const backendUrl = String.fromEnvironment(
@@ -57,10 +60,9 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     AuthService authService = AuthService();
     String? accessToken;
 
-    try{
-       accessToken = await authService.getAccessToken();
-    }
-    catch (e) {
+    try {
+      accessToken = await authService.getAccessToken();
+    } catch (e) {
       print("Error retrieving access token: $e");
       return;
     }
@@ -87,7 +89,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     } else {
       throw Exception('Failed to vote entry');
     }
-
   }
 
   Future<void> _retrieveEntry() async {
@@ -102,14 +103,13 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       if (accessToken == null) {
         throw Exception('No access token found');
       }
+    } catch (e) {
+      accessToken = null;
     }
-    catch (e) {accessToken = null;}
 
     final response = await http.get(
       Uri.parse('$backendUrl/retrieve-entry?id=${widget.blockId}'),
-      headers: {
-        'Authorization': accessToken ?? '',
-      },
+      headers: {'Authorization': accessToken ?? ''},
     );
 
     if (response.statusCode == 200) {
@@ -124,7 +124,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
             .toList();
         _downvotes = entryData['downvotes'] ?? 0;
         _userInteraction = entryData['user_interaction'] ?? '';
-        
+
         // Set the edit state variables as the original entry's information
         _entryTitleController.text = _title;
         _entryContentController.text = _content;
@@ -147,8 +147,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       if (accessToken == null) {
         throw Exception('No access token found');
       }
-    }
-    catch (e) {
+    } catch (e) {
       accessToken = null;
       print("Error retrieving access token: $e");
       return;
@@ -164,6 +163,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
         'entry_id': int.parse(widget.blockId ?? '-1'),
         'context': comment,
         'classification': classification.toLowerCase(),
+        'text_to_improve': _highlightedImprovementText
       }),
     );
 
@@ -187,8 +187,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       if (accessToken == null) {
         throw Exception('No access token found');
       }
-    }
-    catch (e) {
+    } catch (e) {
       accessToken = null;
       print("Error retrieving access token: $e");
       return;
@@ -196,9 +195,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
 
     final response = await http.get(
       Uri.parse('$backendUrl/retrieve-comments?entry_id=${widget.blockId}'),
-      headers: {
-        'Authorization': accessToken,
-      },
+      headers: {'Authorization': accessToken},
     );
 
     if (response.statusCode == 200) {
@@ -214,12 +211,30 @@ class _EntryPageState extends ConsumerState<EntryPage> {
 
   void _onSelectedTag(value) {
     setState(() {
-       Map<String, String> tag = globals.blockTalkTags.firstWhere((t) => t["name"] == value);
+      Map<String, String> tag = globals.blockTalkTags.firstWhere(
+        (t) => t["name"] == value,
+      );
 
-       _selectedTags.add(tag);
-       _selectedTags.removeWhere((t) => t["name"] != tag["name"] && t["classification"] == tag["classification"]);
+      _selectedTags.add(tag);
+      _selectedTags.removeWhere(
+        (t) =>
+            t["name"] != tag["name"] &&
+            t["classification"] == tag["classification"],
+      );
 
-       print(_selectedTags);
+      print(_selectedTags);
+    });
+  }
+
+  void _setClassificationValue(value) {
+      setState(() {
+        _selectedClassification = value;
+      });
+  }
+
+  void _setHighlightedImprovementText(value){
+    setState(() {
+      _highlightedImprovementText = value;
     });
   }
 
@@ -230,8 +245,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
 
     _retrieveEntry();
     _retrieveComments();
-
-
   }
 
   Future<void> _editEntry() async {
@@ -248,9 +261,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       print(newContent);
       print(_selectedTags);
 
-      ScaffoldMessenger.of(
-        context
-      ).showSnackBar(SnackBar(content: Text('')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
     }
 
     print("EDITED CONTENT:");
@@ -258,14 +269,13 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     print(newContent);
     print(_selectedTags);
 
-
     Uri url = Uri.parse('$backendUrl/edit-entry');
 
     final entryData = {
       'newTitle': newTitle,
       'newContent': newContent,
       'newTags': _selectedTags,
-      "entryId": int.parse(widget.blockId!)
+      "entryId": int.parse(widget.blockId!),
     };
 
     AuthService authService = AuthService();
@@ -275,23 +285,21 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       url,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': accessToken.toString()
+        'Authorization': accessToken.toString(),
       },
-      body: json.encode(entryData)
+      body: json.encode(entryData),
     );
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(
-        context
+        context,
       ).showSnackBar(SnackBar(content: Text('Successfully edited entry')));
 
       setState(() {
         _retrieveEntry();
         _editMode = false;
       });
-
     }
-
   }
 
   @override
@@ -325,7 +333,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                                 text: "15 Contributors",
                                 fontSize: 14.0,
                               ),
-                            ]
+                            ],
                           ),
                           if (isAuthenticated)
                             IconButton(
@@ -335,37 +343,53 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                                   _entryContentController.text = _content;
                                   _entryTitleController.text = _title;
                                 });
-                            },
+                              },
                               icon: const Icon(Icons.edit),
                               color: AppColors.primaryButtonColor,
                             ),
                         ],
                       ),
-                      if (_editMode) 
+                      if (_editMode)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(height: 12),
                             BlockTalkDropdownButton(
-                              items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Zoning').map((tag) => tag["name"].toString()).toList(),
+                              items: globals.blockTalkTags
+                                  .where(
+                                    (tag) => tag["classification"] == 'Zoning',
+                                  )
+                                  .map((tag) => tag["name"].toString())
+                                  .toList(),
                               onChanged: (value) {
                                 _onSelectedTag(value);
                               },
-                              initialValue: _tags
-                                  .firstWhere((tag) => tag["classification"] == 'Zoning')["name"]
+                              currentChoice: _tags
+                                  .firstWhere(
+                                    (tag) => tag["classification"] == 'Zoning',
+                                  )["name"]
                                   .toString(),
-                              title: "Select Zoning Tag"
+                              title: "Select Zoning Tag",
                             ),
                             SizedBox(height: 12),
                             BlockTalkDropdownButton(
-                              items: globals.blockTalkTags.where((tag) => tag["classification"] == 'Progress').map((tag) => tag["name"].toString()).toList(), 
+                              items: globals.blockTalkTags
+                                  .where(
+                                    (tag) =>
+                                        tag["classification"] == 'Progress',
+                                  )
+                                  .map((tag) => tag["name"].toString())
+                                  .toList(),
                               onChanged: (value) {
                                 _onSelectedTag(value);
                               },
-                              initialValue: _tags
-                                  .firstWhere((tag) => tag["classification"] == 'Progress')["name"]
+                              currentChoice: _tags
+                                  .firstWhere(
+                                    (tag) =>
+                                        tag["classification"] == 'Progress',
+                                  )["name"]
                                   .toString(),
-                              title: "Select Progress Tag"
+                              title: "Select Progress Tag",
                             ),
                             SizedBox(height: 12),
                             BlockTalkTextField(
@@ -383,24 +407,32 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             BlockTalkButton(
                               text: "Edit Entry Content",
                               type: "outline",
-                              onPressed: () => {_editEntry()}
-                            ) 
-                          ]
+                              onPressed: () => {_editEntry()},
+                            ),
+                          ],
                         )
-                      else 
+                      else
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+                              padding: const EdgeInsets.only(
+                                top: 8.0,
+                                bottom: 8.0,
+                              ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
-                                  ..._tags.map((tag) => 
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                                      child: BlockTalkPill(text: tag["name"]!, classification: tag["classification"]!)
-                                    )
+                                  ..._tags.map(
+                                    (tag) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2.0,
+                                      ),
+                                      child: BlockTalkPill(
+                                        text: tag["name"]!,
+                                        classification: tag["classification"]!,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -408,7 +440,14 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             SizedBox(height: 12),
                             BlockTalkText(text: _title, fontSize: 24.0),
                             SizedBox(height: 8),
-                            BlockTalkText(text: _content, fontSize: 16.0),
+                            BlockTalkText(
+                              text: _content,
+                              fontSize: 16.0,
+                              isSelectable: true,
+                              suggestImprovementFocusNode: commentFocusNode,
+                              setClassificationValue: _setClassificationValue,
+                              selectableCallback: _setHighlightedImprovementText
+                            ),
                           ],
                         ),
                       SizedBox(height: 16),
@@ -422,7 +461,12 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             onPressed: (interactionType) {
                               voteEntry(interactionType.toLowerCase());
                             },
-                            icon: Icon(Icons.arrow_upward_rounded, color: _userInteraction == 'upvote' ? Colors.white : AppColors.primaryButtonColor),
+                            icon: Icon(
+                              Icons.arrow_upward_rounded,
+                              color: _userInteraction == 'upvote'
+                                  ? Colors.white
+                                  : AppColors.primaryButtonColor,
+                            ),
                           ),
                           VoteButton(
                             label: "Downvote",
@@ -431,7 +475,12 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             onPressed: (interactionType) {
                               voteEntry(interactionType.toLowerCase());
                             },
-                            icon: Icon(Icons.arrow_downward_rounded, color: _userInteraction == 'downvote' ? Colors.white : AppColors.primaryButtonColor),
+                            icon: Icon(
+                              Icons.arrow_downward_rounded,
+                              color: _userInteraction == 'downvote'
+                                  ? Colors.white
+                                  : AppColors.primaryButtonColor,
+                            ),
                           ),
                         ],
                       ),
@@ -445,32 +494,33 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             _commentController.clear();
                           }
                         },
-                        initialClassification: _selectedClassification,
                         onClassificationChanged: (value) {
-                          setState(() {
-                            _selectedClassification = value;
-                          });
+                           _setClassificationValue(value);
                         },
                         disabled: !isAuthenticated,
+                        focusNode: commentFocusNode,
+                        selectedClassification: _selectedClassification,
+                        commentClassifications: ['Opinion', 'Source', 'Improvement'],
+                        highlightedText: _highlightedImprovementText
                       ),
                       ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _comments?.length ?? 0,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            final comment = _comments?[index];
-                            return Comment(
-                              id: comment['id'] ?? 0,
-                              entryId: int.parse(widget.blockId ?? '-1'),
-                              parentId: null,
-                              author: comment['username'] ?? 'Unknown',
-                              text: comment['context'] ?? '',
-                              classification: comment['type'] ?? 'opinion',
-                              numOfReplies: comment['num_of_replies'] ?? 0,
-                              addCommentIsDisabled: !isAuthenticated
-                            );
-                          },
-                        ),
+                        shrinkWrap: true,
+                        itemCount: _comments?.length ?? 0,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final comment = _comments?[index];
+                          return Comment(
+                            id: comment['id'] ?? 0,
+                            entryId: int.parse(widget.blockId ?? '-1'),
+                            parentId: null,
+                            author: comment['username'] ?? 'Unknown',
+                            text: comment['context'] ?? '',
+                            classification: comment['type'] ?? 'opinion',
+                            numOfReplies: comment['num_of_replies'] ?? 0,
+                            addCommentIsDisabled: !isAuthenticated,
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

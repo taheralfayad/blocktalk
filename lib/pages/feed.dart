@@ -67,7 +67,7 @@ class _FeedPageState extends ConsumerState<FeedPage> {
                   ),
                   const SizedBox(height: 12),
                   BlockTalkDropdownButton(
-                    initialValue: '10mi',
+                    currentChoice: '10mi',
                     items: const ['5mi', '10mi', '20mi', '50mi', '100mi'],
                     onChanged: (value) {
                       _setRadius(value ?? '10mi');

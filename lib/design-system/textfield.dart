@@ -6,6 +6,7 @@ class BlockTalkTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final int? maxLines;
+  final Function(String)? selectableCallback;
 
   const BlockTalkTextField({
     super.key,
@@ -14,6 +15,7 @@ class BlockTalkTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.maxLines = 1,
+    this.selectableCallback
   });
 
   @override
