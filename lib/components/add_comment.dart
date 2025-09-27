@@ -135,7 +135,7 @@ class _AddCommentState extends State<AddComment> {
                             if (widget.onSubmit != null) {
                               widget.onSubmit!(
                                 widget.commentController.text,
-                                widget.selectedClassification!,
+                                widget.selectedClassification ?? "opinion",
                               );
                             }
                             widget.commentController.clear();

@@ -44,6 +44,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   bool _editMode = false;
   List<Map<String, String>> _selectedTags = [];
   String? _highlightedImprovementText;
+  String commentFilter = "Conversation";
 
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _entryContentController = TextEditingController();
@@ -114,7 +115,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
 
     if (response.statusCode == 200) {
       final Map<String, dynamic> entryData = jsonDecode(response.body);
-      print(entryData);
       setState(() {
         _title = entryData['title'] ?? '';
         _content = entryData['content'] ?? '';
@@ -163,7 +163,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
         'entry_id': int.parse(widget.blockId ?? '-1'),
         'context': comment,
         'classification': classification.toLowerCase(),
-        'text_to_improve': _highlightedImprovementText
+        'text_to_improve': _highlightedImprovementText,
       }),
     );
 
@@ -199,7 +199,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     );
 
     if (response.statusCode == 200) {
-      print(response.body);
       final List<dynamic>? commentsData = jsonDecode(response.body);
       setState(() {
         _comments = commentsData;
@@ -221,18 +220,16 @@ class _EntryPageState extends ConsumerState<EntryPage> {
             t["name"] != tag["name"] &&
             t["classification"] == tag["classification"],
       );
-
-      print(_selectedTags);
     });
   }
 
   void _setClassificationValue(value) {
-      setState(() {
-        _selectedClassification = value;
-      });
+    setState(() {
+      _selectedClassification = value;
+    });
   }
 
-  void _setHighlightedImprovementText(value){
+  void _setHighlightedImprovementText(value) {
     setState(() {
       _highlightedImprovementText = value;
     });
@@ -241,10 +238,20 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   void initState() {
     super.initState();
 
-    print("Block ID: ${widget.blockId}");
-
     _retrieveEntry();
     _retrieveComments();
+  }
+
+  void switchComment() {
+    if (commentFilter == "Conversation") {
+      setState(() {
+        commentFilter = "Suggestions";
+      });
+    } else if (commentFilter == "Suggestions") {
+      setState(() {
+        commentFilter = "Conversation";
+      });
+    }
   }
 
   Future<void> _editEntry() async {
@@ -257,17 +264,8 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     );
 
     if (newTitle.isEmpty || newContent.isEmpty || _selectedTags.isEmpty) {
-      print(newTitle);
-      print(newContent);
-      print(_selectedTags);
-
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('')));
     }
-
-    print("EDITED CONTENT:");
-    print(newTitle);
-    print(newContent);
-    print(_selectedTags);
 
     Uri url = Uri.parse('$backendUrl/edit-entry');
 
@@ -446,7 +444,8 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                               isSelectable: true,
                               suggestImprovementFocusNode: commentFocusNode,
                               setClassificationValue: _setClassificationValue,
-                              selectableCallback: _setHighlightedImprovementText
+                              selectableCallback:
+                                  _setHighlightedImprovementText,
                             ),
                           ],
                         ),
@@ -484,7 +483,40 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                           ),
                         ],
                       ),
-                      BlockTalkBanner(text: "Conversation"),
+                      SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          BlockTalkButton(
+                            text: "Conversation",
+                            type: "transparent",
+                            onPressed: () {
+                              switchComment();
+                            },
+                            selected: commentFilter == "Conversation",
+                          ),
+                          BlockTalkButton(
+                            text: "Suggestions",
+                            type: "transparent",
+                            onPressed: () {
+                              switchComment();
+                            },
+                            selected: commentFilter == "Suggestions",
+                          ),
+                        ],
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10.0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(
+                              color: AppColors.navigationBarColor,
+                              width: 1.0,
+                            ),
+                          ),
+                        ),
+                      ),
                       SizedBox(height: 12),
                       AddComment(
                         commentController: _commentController,
@@ -495,20 +527,51 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                           }
                         },
                         onClassificationChanged: (value) {
-                           _setClassificationValue(value);
+                          _setClassificationValue(value);
                         },
                         disabled: !isAuthenticated,
                         focusNode: commentFocusNode,
                         selectedClassification: _selectedClassification,
-                        commentClassifications: ['Opinion', 'Source', 'Improvement'],
-                        highlightedText: _highlightedImprovementText
+                        commentClassifications: [
+                          'Opinion',
+                          'Source',
+                          'Improvement',
+                        ],
+                        highlightedText: _highlightedImprovementText,
                       ),
                       ListView.builder(
                         shrinkWrap: true,
-                        itemCount: _comments?.length ?? 0,
+                        itemCount:
+                            _comments?.where((comment) {
+                              if (commentFilter == "Suggestions") {
+                                return comment['type']?.toLowerCase() ==
+                                    "improvement";
+                              } else if (commentFilter == "Conversation") {
+                                return comment['type']?.toLowerCase() ==
+                                        "opinion" ||
+                                    comment['type']?.toLowerCase() == "source";
+                              }
+                              return true;
+                            }).length ??
+                            0,
                         physics: NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
-                          final comment = _comments?[index];
+                          final filteredComments =
+                              _comments?.where((comment) {
+                                if (commentFilter == "Suggestions") {
+                                  return comment['type']?.toLowerCase() ==
+                                      "improvement";
+                                } else if (commentFilter == "Conversation") {
+                                  return comment['type']?.toLowerCase() ==
+                                          "opinion" ||
+                                      comment['type']?.toLowerCase() ==
+                                          "source";
+                                }
+                                return true;
+                              }).toList() ??
+                              [];
+
+                          final comment = filteredComments[index];
                           return Comment(
                             id: comment['id'] ?? 0,
                             entryId: int.parse(widget.blockId ?? '-1'),

@@ -8,6 +8,7 @@ class BlockTalkButton extends StatelessWidget {
   final String type;
   final VoidCallback onPressed;
   final Color buttonColor;
+  final bool? selected;
 
   const BlockTalkButton({
     super.key,
@@ -15,6 +16,7 @@ class BlockTalkButton extends StatelessWidget {
     required this.type,
     required this.onPressed,
     this.buttonColor = AppColors.primaryButtonColor,
+    this.selected
   });
 
   @override
@@ -36,14 +38,38 @@ class BlockTalkButton extends StatelessWidget {
         onPressed: () {onPressed();},
         style: OutlinedButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.0), // Rectangular corners
+            borderRadius: BorderRadius.circular(8.0),
           ),
           side: BorderSide(color: buttonColor, width: 2.0),
         ),
         child: BlockTalkText(text: text),
       );
+    }
+    else if (type == "transparent") {
+      return TextButton(
+        style: TextButton.styleFrom(
+          backgroundColor: selected! 
+              ? buttonColor.withOpacity(0.1)
+              : Colors.transparent,
+          foregroundColor: selected! 
+              ? Theme.of(context).colorScheme.primary
+              : Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: selected!
+                ? BorderSide(color: buttonColor)
+                : BorderSide.none,
+          ),
+        ),
+        onPressed: onPressed,
+        child: BlockTalkText(
+          text: text,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+        ),
+      );
     } else {
-      throw Exception("Invalid button type");
+      return BlockTalkText(text: "Invalid Button Type");
     }
   }
 }
