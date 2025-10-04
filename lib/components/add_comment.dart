@@ -17,7 +17,6 @@ class AddComment extends StatefulWidget {
   final FocusNode? focusNode;
   final String? selectedClassification;
   final List<String>? commentClassifications;
-  final String? highlightedText;
 
   const AddComment({
     super.key,
@@ -31,7 +30,6 @@ class AddComment extends StatefulWidget {
     this.focusNode,
     this.selectedClassification,
     this.commentClassifications,
-    this.highlightedText
   });
 
   @override
@@ -101,13 +99,6 @@ class _AddCommentState extends State<AddComment> {
                   ],
                 ),
                 SizedBox(height: 8.0),
-              if (widget.selectedClassification == "Improvement" &&
-                  widget.highlightedText != null &&
-                  widget.highlightedText!.isNotEmpty)
-                  Blockquote(
-                    headerText: "You are suggesting improvements for:",
-                    quoteText: widget.highlightedText
-                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [

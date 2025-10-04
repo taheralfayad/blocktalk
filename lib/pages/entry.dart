@@ -43,8 +43,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   List<dynamic>? _comments = [];
   bool _editMode = false;
   List<Map<String, String>> _selectedTags = [];
-  String? _highlightedImprovementText;
-  String commentFilter = "Conversation";
+  String _commentFilter = "Updates";
 
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _entryContentController = TextEditingController();
@@ -163,7 +162,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
         'entry_id': int.parse(widget.blockId ?? '-1'),
         'context': comment,
         'classification': classification.toLowerCase(),
-        'text_to_improve': _highlightedImprovementText,
       }),
     );
 
@@ -229,12 +227,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     });
   }
 
-  void _setHighlightedImprovementText(value) {
-    setState(() {
-      _highlightedImprovementText = value;
-    });
-  }
-
   void initState() {
     super.initState();
 
@@ -242,16 +234,10 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     _retrieveComments();
   }
 
-  void switchComment() {
-    if (commentFilter == "Conversation") {
-      setState(() {
-        commentFilter = "Suggestions";
-      });
-    } else if (commentFilter == "Suggestions") {
-      setState(() {
-        commentFilter = "Conversation";
-      });
-    }
+  void switchCommentFilter(value) {
+    setState(() {
+      _commentFilter = value;
+    });
   }
 
   Future<void> _editEntry() async {
@@ -441,11 +427,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             BlockTalkText(
                               text: _content,
                               fontSize: 16.0,
-                              isSelectable: true,
-                              suggestImprovementFocusNode: commentFocusNode,
-                              setClassificationValue: _setClassificationValue,
-                              selectableCallback:
-                                  _setHighlightedImprovementText,
                             ),
                           ],
                         ),
@@ -488,20 +469,20 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           BlockTalkButton(
-                            text: "Conversation",
+                            text: "Updates",
                             type: "transparent",
                             onPressed: () {
-                              switchComment();
+                              switchCommentFilter("Updates");
                             },
-                            selected: commentFilter == "Conversation",
+                            selected: _commentFilter == "Updates",
                           ),
                           BlockTalkButton(
-                            text: "Suggestions",
+                            text: "Conversations",
                             type: "transparent",
                             onPressed: () {
-                              switchComment();
+                              switchCommentFilter("Conversations");
                             },
-                            selected: commentFilter == "Suggestions",
+                            selected: _commentFilter == "Conversations",
                           ),
                         ],
                       ),
@@ -532,45 +513,40 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                         disabled: !isAuthenticated,
                         focusNode: commentFocusNode,
                         selectedClassification: _selectedClassification,
-                        commentClassifications: [
-                          'Opinion',
-                          'Source',
-                          'Improvement',
-                        ],
-                        highlightedText: _highlightedImprovementText,
+                        commentClassifications: ['Opinion', 'Source', 'Update']
                       ),
                       ListView.builder(
                         shrinkWrap: true,
                         itemCount:
                             _comments?.where((comment) {
-                              if (commentFilter == "Suggestions") {
+                              if (_commentFilter == "Conversations") {
                                 return comment['type']?.toLowerCase() ==
-                                    "improvement";
-                              } else if (commentFilter == "Conversation") {
-                                return comment['type']?.toLowerCase() ==
-                                        "opinion" ||
-                                    comment['type']?.toLowerCase() == "source";
+                                    "opinion";
                               }
-                              return true;
+                              else if (_commentFilter == "Updates") {
+                                return comment['type'].toLowerCase() ==
+                                    "update" || comment['type'].toLowerCase() ==
+                                    "source";
+                              }
+                              return false;
                             }).length ??
                             0,
                         physics: NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
                           final filteredComments =
                               _comments?.where((comment) {
-                                if (commentFilter == "Suggestions") {
+                                if (_commentFilter == "Conversations") {
                                   return comment['type']?.toLowerCase() ==
-                                      "improvement";
-                                } else if (commentFilter == "Conversation") {
+                                      "opinion";
+                                } else if (_commentFilter == "Updates") {
                                   return comment['type']?.toLowerCase() ==
-                                          "opinion" ||
+                                          "update" ||
                                       comment['type']?.toLowerCase() ==
                                           "source";
                                 }
-                                return true;
+                                return false;
                               }).toList() ??
                               [];
-
                           final comment = filteredComments[index];
                           return Comment(
                             id: comment['id'] ?? 0,

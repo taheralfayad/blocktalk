@@ -261,11 +261,6 @@ class _CommentState extends State<Comment> {
                   )
               )
             ),
-          if (widget.classification == 'improvement')
-            Blockquote(
-              headerText: "Suggested improvement for: ",
-              quoteText: widget.textToImprove,
-            ),
           if (widget.classification == 'opinion' && _addReplyIsExpanded)
             AddComment(
               avatarUrl: widget.avatarUrl,
