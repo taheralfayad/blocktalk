@@ -43,7 +43,7 @@ class Comment extends StatefulWidget {
 
 
 class _CommentState extends State<Comment> {
-  ValueNotifier<bool> _repliesIsExpanded = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _repliesIsExpanded = ValueNotifier<bool>(false);
   bool _addReplyIsExpanded = false;
   late int _repliesCount;
 
@@ -270,6 +270,7 @@ class _CommentState extends State<Comment> {
               onSubmit: (String replyText, String classification) {
                 addReply(replyText, classification);
                 setState(() {
+                  _repliesIsExpanded.value = true;
                   _addReplyIsExpanded = false;
                 });
               },

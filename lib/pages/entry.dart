@@ -167,6 +167,10 @@ class _EntryPageState extends ConsumerState<EntryPage> {
 
     if (response.statusCode == 201) {
       print('Comment added successfully');
+      dynamic commentResponseData = jsonDecode(response.body);
+      setState(() {
+        _comments?.insert(0, commentResponseData);
+      });
     } else {
       print('Failed to add comment: ${response.body}');
       throw Exception('Failed to add comment');
