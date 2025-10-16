@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../design-system/text.dart';
-import '../design-system/blockquote.dart';
+import '../design-system/colors.dart';
 
 import '../components/add_comment.dart';
+import '../components/upvote_downvote.dart';
 
 import '../services/auth_service.dart';
 
@@ -20,8 +22,12 @@ class Comment extends StatefulWidget {
   final String author;
   final String classification;
   final String avatarUrl;
-  final String? textToImprove; // only if the classification is "Improvement"
+  final String currentCommentInteraction;
   final bool addCommentIsDisabled;
+  final int numOfUpvotes;
+  final int numOfDownvotes;
+  final int depth;
+  final Function(int, String, int, int) updateCommentInteractionData;
 
   const Comment({
     super.key,
@@ -31,32 +37,56 @@ class Comment extends StatefulWidget {
     required this.author,
     required this.classification,
     required this.addCommentIsDisabled,
+    required this.numOfUpvotes,
+    required this.numOfDownvotes,
+    required this.updateCommentInteractionData,
+    this.currentCommentInteraction = "",
     this.avatarUrl = 'assets/avatar.jpg',
-    this.textToImprove,
     this.parentId,
     this.numOfReplies = 0,
+    this.depth = 1,
   });
 
   @override
   State<Comment> createState() => _CommentState();
 }
 
-
 class _CommentState extends State<Comment> {
   final ValueNotifier<bool> _repliesIsExpanded = ValueNotifier<bool>(false);
   bool _addReplyIsExpanded = false;
   late int _repliesCount;
 
-  List<Comment> replies = [];
+  List<dynamic> replies = [];
+
+  void updateReplyData(
+    int id,
+    String currentCommentInteraction,
+    int upvotes,
+    int downvotes,
+  ) {
+    setState(() {
+      int toBeUpdated = replies.indexWhere((r) => r['id'] == id);
+
+      if (toBeUpdated != -1) {
+        replies[toBeUpdated]["num_of_upvotes"] = upvotes;
+        replies[toBeUpdated]["num_of_downvotes"] = downvotes;
+        replies[toBeUpdated]["current_comment_interaction"] =
+            currentCommentInteraction;
+      }
+    });
+  }
 
   Future<void> fetchReplies() async {
-    const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8080');
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:8080',
+    );
 
     final response = await http.get(
-      Uri.parse('$backendUrl/retrieve-comment-replies?comment_id=${widget.id}&entry_id=${widget.entryId}'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      Uri.parse(
+        '$backendUrl/retrieve-comment-replies?comment_id=${widget.id}&entry_id=${widget.entryId}',
+      ),
+      headers: {'Content-Type': 'application/json'},
     );
 
     if (response.statusCode == 200) {
@@ -65,37 +95,30 @@ class _CommentState extends State<Comment> {
       print('Fetched replies: $data');
 
       setState(() {
-        replies = data.map((reply) => Comment(
-          id: reply['id'],
-          entryId: widget.entryId,
-          text: reply['context'],
-          parentId: widget.id,
-          author: reply['username'],
-          classification: reply['type'],
-          numOfReplies: reply['num_of_replies'] ?? 0,
-          addCommentIsDisabled: widget.addCommentIsDisabled
-        )).toList();
+        replies = data;
 
         _repliesCount = replies.length;
       });
-    }
-    else {
-      print('Failed to fetch replies: ${response.statusCode} - ${response.body}');
+    } else {
+      print(
+        'Failed to fetch replies: ${response.statusCode} - ${response.body}',
+      );
       throw Exception('Failed to fetch replies');
     }
-
   }
 
   Future<void> addReply(String replyText, String classification) async {
-    const backendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: 'http://localhost:8080');
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:8080',
+    );
 
     AuthService authService = AuthService();
     String? accessToken;
 
     try {
       accessToken = await authService.getAccessToken();
-    }
-    catch (e) {
+    } catch (e) {
       print('Error fetching access token: $e');
       return;
     }
@@ -108,7 +131,7 @@ class _CommentState extends State<Comment> {
       },
       body: jsonEncode({
         'entry_id': widget.entryId,
-        'parent_id': widget.id ?? null,
+        'parent_id': widget.id,
         'context': replyText,
         'classification': classification.toLowerCase(),
       }),
@@ -126,7 +149,11 @@ class _CommentState extends State<Comment> {
         avatarUrl: widget.avatarUrl,
         entryId: data['entry_id'],
         numOfReplies: data['num_of_replies'] ?? 0,
-        addCommentIsDisabled: widget.addCommentIsDisabled 
+        numOfUpvotes: data['num_of_upvotes'] ?? 0,
+        numOfDownvotes: data['num_of_downvotes'] ?? 0,
+        addCommentIsDisabled: widget.addCommentIsDisabled,
+        updateCommentInteractionData: updateReplyData,
+        depth: widget.depth + 1,
       );
 
       setState(() {
@@ -134,9 +161,50 @@ class _CommentState extends State<Comment> {
 
         _repliesCount++;
       });
-
+    } else {
+      print('Failed to add reply: ${response.statusCode} - ${response.body}');
+      throw Exception('Failed to add reply');
     }
-    else {
+  }
+
+  Future<void> voteOnComment(String interactionType) async {
+    const backendUrl = String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://localhost:8080',
+    );
+
+    AuthService authService = AuthService();
+    String? accessToken;
+
+    try {
+      accessToken = await authService.getAccessToken();
+    } catch (e) {
+      print('Error fetching access token: $e');
+      return;
+    }
+
+    final response = await http.post(
+      Uri.parse('$backendUrl/vote-on-comment'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': accessToken.toString(),
+      },
+      body: jsonEncode({
+        'comment_id': widget.id,
+        'interaction_type': interactionType,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      widget.updateCommentInteractionData(
+        widget.id,
+        data["user_interaction"],
+        data["upvotes"],
+        data["downvotes"],
+      );
+    } else {
       print('Failed to add reply: ${response.statusCode} - ${response.body}');
       throw Exception('Failed to add reply');
     }
@@ -149,7 +217,6 @@ class _CommentState extends State<Comment> {
     _repliesCount = widget.numOfReplies;
 
     _repliesIsExpanded.addListener(() {
-      print("Replies expanded: ${_repliesIsExpanded.value}");
       if (_repliesIsExpanded.value && replies.isEmpty) {
         fetchReplies();
       }
@@ -158,12 +225,9 @@ class _CommentState extends State<Comment> {
 
   @override
   Widget build(BuildContext context) {
-    return Container (
+    return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(
-        top: 16.0,
-        bottom: 16.0,
-      ),
+      padding: const EdgeInsets.only(top: 16.0, bottom: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -174,13 +238,11 @@ class _CommentState extends State<Comment> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
-                      right: 8.0,
-                    ),
+                    padding: const EdgeInsets.only(right: 8.0),
                     child: CircleAvatar(
                       radius: 20.0,
                       backgroundImage: AssetImage(widget.avatarUrl),
-                    )
+                    ),
                   ),
                   BlockTalkText(
                     text: widget.author,
@@ -189,7 +251,10 @@ class _CommentState extends State<Comment> {
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 6.0,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(16.0),
@@ -203,20 +268,26 @@ class _CommentState extends State<Comment> {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.only(
-              top: 12.0,
-              bottom: 8.0,
-            ),
-            child: BlockTalkText(
-              text: widget.text,
-              fontSize: 16.0,
-            ),
+            padding: const EdgeInsets.only(top: 12.0, bottom: 8.0),
+            child: BlockTalkText(text: widget.text, fontSize: 16.0),
           ),
-          if (widget.classification == 'opinion') 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              UpvoteDownvote(
+                upvotes: widget.numOfUpvotes,
+                downvotes: widget.numOfDownvotes,
+                voteEntry: (value) {
+                  voteOnComment(value);
+                },
+                currentUserInteraction: widget.currentCommentInteraction,
+                minified: true,
+              ),
+              if (widget.classification == "opinion") ...[
                 TextButton.icon(
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryButtonColor,
+                  ),
                   onPressed: () {
                     setState(() {
                       _addReplyIsExpanded = !_addReplyIsExpanded;
@@ -225,41 +296,47 @@ class _CommentState extends State<Comment> {
                   icon: const Icon(Icons.reply, size: 16.0),
                   label: const Text('Reply'),
                 ),
-                const SizedBox(width: 8.0),
                 TextButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _repliesIsExpanded.value = !_repliesIsExpanded.value;
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryButtonColor,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _repliesIsExpanded.value = !_repliesIsExpanded.value;
                     });
                   },
                   icon: const Icon(Icons.chat, size: 16.0),
                   label: Text('Replies ($_repliesCount)'),
                 ),
-              ]
-            ),
-          if (replies.isNotEmpty && _repliesIsExpanded.value) 
+              ],
+            ],
+          ),
+          if (replies.isNotEmpty && _repliesIsExpanded.value)
             ...replies.map(
               (reply) => Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                child:
-                 Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Comment(
-                        id: reply.id,
-                        text: reply.text,
-                        author: reply.author,
-                        classification: reply.classification,
-                        avatarUrl: reply.avatarUrl,
-                        entryId: widget.entryId,
-                        numOfReplies: reply.numOfReplies,
-                        addCommentIsDisabled : widget.addCommentIsDisabled
-                      )
-                    ),
-                  ],
-                  )
-              )
+                padding: EdgeInsets.only(left: 16.0 * pow(0.5, widget.depth)),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width - 32,
+                  ),
+                  child: Comment(
+                    id: reply['id'],
+                    entryId: widget.entryId,
+                    text: reply['context'],
+                    parentId: widget.id,
+                    author: reply['username'],
+                    classification: reply['type'],
+                    numOfReplies: reply['num_of_replies'] ?? 0,
+                    numOfUpvotes: reply['num_of_upvotes'] ?? 0,
+                    numOfDownvotes: reply['num_of_downvotes'] ?? 0,
+                    currentCommentInteraction:
+                        reply['current_comment_interaction'] ?? "",
+                    addCommentIsDisabled: widget.addCommentIsDisabled,
+                    updateCommentInteractionData: updateReplyData,
+                    depth: widget.depth + 1,
+                  ),
+                ),
+              ),
             ),
           if (widget.classification == 'opinion' && _addReplyIsExpanded)
             AddComment(
@@ -274,10 +351,10 @@ class _CommentState extends State<Comment> {
                   _addReplyIsExpanded = false;
                 });
               },
-              disabled: widget.addCommentIsDisabled
-            )
-        ]
-      )
+              disabled: widget.addCommentIsDisabled,
+            ),
+        ],
+      ),
     );
   }
 }

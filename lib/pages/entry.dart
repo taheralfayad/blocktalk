@@ -8,16 +8,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../design-system/colors.dart';
 import '../design-system/text.dart';
 import '../design-system/pill.dart';
-import '../design-system/vote_button.dart';
 import '../design-system/textfield.dart';
 import '../design-system/dropdown_button.dart';
 import '../design-system/button.dart';
 
 import '../components/navbar.dart';
 import '../components/contributers_circle.dart';
-import '../components/banner.dart';
 import '../components/comment.dart';
 import '../components/add_comment.dart';
+import '../components/upvote_downvote.dart';
 
 import '../providers/auth_provider.dart';
 import '../services/auth_service.dart';
@@ -44,6 +43,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
   bool _editMode = false;
   List<Map<String, String>> _selectedTags = [];
   String _commentFilter = "Updates";
+  List<dynamic>? _filteredComments = [];
 
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _entryContentController = TextEditingController();
@@ -166,7 +166,6 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     );
 
     if (response.statusCode == 201) {
-      print('Comment added successfully');
       dynamic commentResponseData = jsonDecode(response.body);
       setState(() {
         _comments?.insert(0, commentResponseData);
@@ -204,6 +203,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       final List<dynamic>? commentsData = jsonDecode(response.body);
       setState(() {
         _comments = commentsData;
+        _filteredComments = _filterComments();
       });
     } else {
       throw Exception('Failed to load comments');
@@ -231,16 +231,39 @@ class _EntryPageState extends ConsumerState<EntryPage> {
     });
   }
 
-  void initState() {
-    super.initState();
+  List<dynamic>? _filterComments() {
+      List<dynamic>? filteredComments = _comments?.where((comment) {
+        final type = comment['type']?.toLowerCase();
+        if (_commentFilter == "Conversations") {
+          return type == "opinion";
+        } else if (_commentFilter == "Updates") {
+          return type == "update" || type == "source";
+        }
+        return false;
+      }).toList() ?? [];
 
-    _retrieveEntry();
-    _retrieveComments();
+      return filteredComments;
   }
 
-  void switchCommentFilter(value) {
+
+  void updateCommentInteractionData(int commentId, String currentCommentInteraction, int upvotes, int downvotes) {
+    setState(() {
+      int? toBeUpdated=_filteredComments?.indexWhere((c) => c["id"] == commentId);
+
+      if (toBeUpdated != -1 && toBeUpdated != null) {
+        _filteredComments![toBeUpdated]["num_of_upvotes"] = upvotes;
+        _filteredComments![toBeUpdated]["num_of_downvotes"] = downvotes;
+        _filteredComments![toBeUpdated]["current_comment_interaction"] = currentCommentInteraction;
+      }
+
+    });
+  }
+
+
+  void _switchCommentFilter(value) {
     setState(() {
       _commentFilter = value;
+      _filteredComments = _filterComments();
     });
   }
 
@@ -289,6 +312,16 @@ class _EntryPageState extends ConsumerState<EntryPage> {
       });
     }
   }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _retrieveEntry();
+    _retrieveComments();
+
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -435,38 +468,11 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                           ],
                         ),
                       SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          VoteButton(
-                            label: "Upvote",
-                            votes: _upvotes,
-                            hasAlreadyVoted: _userInteraction == 'upvote',
-                            onPressed: (interactionType) {
-                              voteEntry(interactionType.toLowerCase());
-                            },
-                            icon: Icon(
-                              Icons.arrow_upward_rounded,
-                              color: _userInteraction == 'upvote'
-                                  ? Colors.white
-                                  : AppColors.primaryButtonColor,
-                            ),
-                          ),
-                          VoteButton(
-                            label: "Downvote",
-                            votes: _downvotes,
-                            hasAlreadyVoted: _userInteraction == 'downvote',
-                            onPressed: (interactionType) {
-                              voteEntry(interactionType.toLowerCase());
-                            },
-                            icon: Icon(
-                              Icons.arrow_downward_rounded,
-                              color: _userInteraction == 'downvote'
-                                  ? Colors.white
-                                  : AppColors.primaryButtonColor,
-                            ),
-                          ),
-                        ],
+                      UpvoteDownvote(
+                        currentUserInteraction: _userInteraction,
+                        upvotes: _upvotes,
+                        downvotes: _downvotes,
+                        voteEntry: voteEntry
                       ),
                       SizedBox(height: 24),
                       Row(
@@ -476,7 +482,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             text: "Updates",
                             type: "transparent",
                             onPressed: () {
-                              switchCommentFilter("Updates");
+                              _switchCommentFilter("Updates");
                             },
                             selected: _commentFilter == "Updates",
                           ),
@@ -484,7 +490,7 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             text: "Conversations",
                             type: "transparent",
                             onPressed: () {
-                              switchCommentFilter("Conversations");
+                              _switchCommentFilter("Conversations");
                             },
                             selected: _commentFilter == "Conversations",
                           ),
@@ -521,38 +527,12 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                       ),
                       ListView.builder(
                         shrinkWrap: true,
-                        itemCount:
-                            _comments?.where((comment) {
-                              if (_commentFilter == "Conversations") {
-                                return comment['type']?.toLowerCase() ==
-                                    "opinion";
-                              }
-                              else if (_commentFilter == "Updates") {
-                                return comment['type'].toLowerCase() ==
-                                    "update" || comment['type'].toLowerCase() ==
-                                    "source";
-                              }
-                              return false;
-                            }).length ??
-                            0,
+                        itemCount: _filteredComments?.length ?? 0,
                         physics: NeverScrollableScrollPhysics(),
                         itemBuilder: (context, index) {
-                          final filteredComments =
-                              _comments?.where((comment) {
-                                if (_commentFilter == "Conversations") {
-                                  return comment['type']?.toLowerCase() ==
-                                      "opinion";
-                                } else if (_commentFilter == "Updates") {
-                                  return comment['type']?.toLowerCase() ==
-                                          "update" ||
-                                      comment['type']?.toLowerCase() ==
-                                          "source";
-                                }
-                                return false;
-                              }).toList() ??
-                              [];
-                          final comment = filteredComments[index];
+                          final comment = _filteredComments?[index];
                           return Comment(
+                            key: ValueKey(comment['id']), 
                             id: comment['id'] ?? 0,
                             entryId: int.parse(widget.blockId ?? '-1'),
                             parentId: null,
@@ -560,8 +540,11 @@ class _EntryPageState extends ConsumerState<EntryPage> {
                             text: comment['context'] ?? '',
                             classification: comment['type'] ?? 'opinion',
                             numOfReplies: comment['num_of_replies'] ?? 0,
-                            textToImprove: comment['text_to_improve'],
+                            numOfUpvotes: comment['num_of_upvotes'] ?? 0,
+                            numOfDownvotes: comment['num_of_downvotes'] ?? 0,
+                            currentCommentInteraction: comment['current_comment_interaction'] ?? "",
                             addCommentIsDisabled: !isAuthenticated,
+                            updateCommentInteractionData: updateCommentInteractionData,
                           );
                         },
                       ),
