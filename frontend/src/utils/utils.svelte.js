@@ -3,6 +3,17 @@ import { ZONING_ICON_MAP, CONSTRUCTION_ICON_MAP } from "./icon_map.svelte.js";
 
 import { getFeed, setFeed, setFeedShown } from '../states/feed.svelte.js';
 
+import { api } from "../utils/api.svelte.js";
+
+export const isLoggedIn = async () => {
+  try {
+    await api.get("/users/me");
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 export function _setMarkerBasedOnTags(zoningTag, progressTag) {
   const zone = ZONING_ICON_MAP[zoningTag];
   const construction = CONSTRUCTION_ICON_MAP[progressTag]

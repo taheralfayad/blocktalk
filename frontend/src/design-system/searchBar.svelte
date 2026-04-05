@@ -20,18 +20,6 @@
     setLocationSearchValue(searchValue);
   });
 
-  async function retrieveFeed() {
-    const response = await api.get(
-      `/entries/feed?location=${getLocationSearchValue()}&distance=${getDistance()}`,
-    );
-
-    if (response.ok && response.status !== 204) {
-      const data = await response.json();
-
-      console.log(data);
-    }
-  }
-
   async function handleInput(event) {
     setLocationSearchValue(event.target.value);
 
@@ -53,7 +41,6 @@
     const suggestionObject = suggestions.find(
       (suggestion) => suggestion.city === suggestionName,
     );
-    console.log(suggestionObject);
     let map = getMap();
     map.flyTo({
       center: [suggestionObject.lng, suggestionObject.lat],
@@ -63,7 +50,6 @@
     });
     setLocationSearchValue(suggestionName);
     searchValue = suggestionName;
-    await retrieveFeed();
     suggestions = [];
   }
 </script>

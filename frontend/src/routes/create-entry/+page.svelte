@@ -7,11 +7,12 @@
   import Tags from "../../globals/tags.json";
 
   import { api } from "../../utils/api.svelte";
+  import { page } from "$app/stores";
 
   let title = $state("");
   let location = $state("");
-  let latitude = $state("");
-  let longitude = $state("");
+  let latitude = $state(parseFloat($page.url.searchParams.get("lat")) || "");
+  let longitude = $state(parseFloat($page.url.searchParams.get("lng")) || "");
   let zoningTag = $state("");
   let progressTag = $state("");
   let description = $state("");
@@ -21,6 +22,21 @@
   let suggestions = $state([]);
 
   const suggestionsHidden = $derived(suggestions.length === 0);
+
+  let reverseGeocode = async (lat, lon) => {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
+    );
+    const data = await res.json();
+    let address = data.display_name || `${lat}, ${lon}`;
+    location = address;
+  };
+
+  $effect(() => {
+    if (latitude && longitude) {
+      reverseGeocode(latitude, longitude);
+    }
+  });
 
   let handleLocationAutosuggestion = async (event) => {
     if (location.length > 3) {
@@ -56,13 +72,10 @@
         navigator.geolocation.getCurrentPosition(resolve, reject);
       });
 
-      const { latitude, longitude } = position.coords;
-
-      const data = await api.get(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-      );
-
-      location = data.display_name || `${latitude}, ${longitude}`;
+      const { latitude: lat, longitude: lon } = position.coords;
+      latitude = lat;
+      longitude = lon;
+      await reverseGeocode(lat, lon);
     } catch (err) {
       console.error("Geolocation error:", err);
 

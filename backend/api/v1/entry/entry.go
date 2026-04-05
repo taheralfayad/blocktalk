@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"backend/api/v1/utils"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -8,8 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-
-	"backend/api/v1/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -264,7 +263,7 @@ func RetrieveEntriesWithinVisibleBounds(c *gin.Context, db *sql.DB) {
 	}
 
 	if len(entries) == 0 {
-		messages.StatusNoContent(c, err)
+		messages.StatusNoContent(c, errors.New("no entries goat </3"))
 		return
 	}
 

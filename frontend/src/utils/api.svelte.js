@@ -33,6 +33,13 @@ export async function apiRequest(
   let data;
   const contentType = response.headers.get('content-type');
 
+  if (response.status === 204) {
+    throw {
+      status: response.status,
+      data
+    }
+  }
+
   if (contentType && contentType.includes('application/json')) {
     data = await response.json();
   } else {

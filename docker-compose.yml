@@ -33,5 +33,19 @@ services:
     env_file:
       - .env
 
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - database
+    volumes:
+      - ./backend/migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path", "/migrations",
+        "-database", "postgres://postgres:postgres@database:5432/postgres?sslmode=disable"
+      ]
+    command: ["up"]
+
 volumes:
   postgres_data:
