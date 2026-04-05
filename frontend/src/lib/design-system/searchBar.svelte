@@ -6,7 +6,7 @@
     setLocationSearchValue,
   } from "../states/searchBarState.svelte.js";
   import { getMap } from "../states/map.svelte.js";
-  import DropdownTextfield from "../components/dropdownTextfield.svelte";
+  import DropdownTextfield from "$lib/components/dropdownTextfield.svelte";
 
   import { api } from "../utils/api.svelte.js";
 

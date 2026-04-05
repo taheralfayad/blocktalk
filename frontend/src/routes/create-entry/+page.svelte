@@ -1,9 +1,9 @@
 <script>
-  import Retvrn from "../../components/retvrn.svelte";
-  import Input from "../../components/input.svelte";
-  import SelectInput from "../../components/select.svelte";
-  import DropdownTextfield from "../../components/dropdownTextfield.svelte";
-  import Button from "../../components/button.svelte";
+  import Retvrn from "$lib/components/retvrn.svelte";
+  import Input from "$lib/components/input.svelte";
+  import SelectInput from "$lib/components/select.svelte";
+  import DropdownTextfield from "$lib/components/dropdownTextfield.svelte";
+  import Button from "$lib/components/button.svelte";
   import Tags from "../../globals/tags.json";
 
   import { api } from "../../utils/api.svelte";

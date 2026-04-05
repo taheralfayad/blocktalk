@@ -1,5 +1,5 @@
 <script>
-  import Header from "../components/header.svelte";
+  import Header from "$lib/components/header.svelte";
   import debounce from "lodash/debounce";
   import { onMount, onDestroy } from "svelte";
   import { setFeed } from "../states/feed.svelte.js";

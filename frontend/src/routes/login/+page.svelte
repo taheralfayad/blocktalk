@@ -1,8 +1,8 @@
 <script>
   import { goto } from "$app/navigation";
 
-  import Input from "../../components/login/input.svelte";
-  import Retvrn from "../../components/retvrn.svelte";
+  import Input from "$lib/components/login/input.svelte";
+  import Retvrn from "$lib/components/retvrn.svelte";
 
   import { api } from "../../utils/api.svelte";
 

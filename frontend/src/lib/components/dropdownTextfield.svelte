@@ -1,12 +1,12 @@
 <script>
-  import Input from '../components/input.svelte';
+  import Input from "$lib/components/input.svelte";
 
   let {
     suggestionsHidden,
     suggestions,
     handleInput,
     selectSuggestion,
-    searchValue = $bindable()
+    searchValue = $bindable(),
   } = $props();
 </script>
 
@@ -15,7 +15,7 @@
     bind:value={searchValue}
     id="searchBar"
     placeholder="Find a city"
-    handleInput={handleInput}
+    {handleInput}
   />
 
   {#if !suggestionsHidden && suggestions.length}

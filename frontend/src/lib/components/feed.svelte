@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Entry from "../components/entry.svelte";
+  import Entry from "$lib/components/entry.svelte";
   import rightArrow from "$lib/assets/right.svg";
   import {
     getDistance,
