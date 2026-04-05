@@ -4,7 +4,7 @@
   import SelectInput from "$lib/components/select.svelte";
   import DropdownTextfield from "$lib/components/dropdownTextfield.svelte";
   import Button from "$lib/components/button.svelte";
-  import Tags from "../../globals/tags.json";
+  import Tags from "$lib/globals/tags.json";
 
   import { api } from "../../utils/api.svelte";
   import { page } from "$app/stores";
