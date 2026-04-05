@@ -51,7 +51,8 @@ export function addLogoMarker(map, lng, lat, zoningTag, progressTag) {
   el.style.backgroundPosition = "left center, right center";
   el.style.cursor = "pointer";
 
-  el.addEventListener("click", () => {
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
     setFeedShown(true);
 
     const updatedFeed = getFeed().map(item => {
