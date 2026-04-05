@@ -4,8 +4,8 @@
     getLocationSearchValue,
     setDistance,
     setLocationSearchValue,
-  } from "../states/searchBarState.svelte.js";
-  import { getMap } from "../states/map.svelte.js";
+  } from "$lib/states/searchBarState.svelte.js";
+  import { getMap } from "$lib/states/map.svelte.js";
   import DropdownTextfield from "$lib/components/dropdownTextfield.svelte";
 
   import { api } from "../utils/api.svelte.js";

@@ -4,7 +4,7 @@
   import {
     getDistance,
     getLocationSearchValue,
-  } from "../states/searchBarState.svelte.js";
+  } from "$lib/states/searchBarState.svelte.js";
   import { fly } from "svelte/transition";
 
   import { api } from "../utils/api.svelte.js";
@@ -14,7 +14,7 @@
     setFeedShown,
     getFeed,
     setFeed,
-  } from "../states/feed.svelte.js";
+  } from "$lib/states/feed.svelte.js";
 
   let feedShown = $derived(getFeedShown());
   let feed: any[] = $state([]);

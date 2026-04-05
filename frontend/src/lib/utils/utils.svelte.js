@@ -1,7 +1,7 @@
 import maplibregl from "maplibre-gl";
 import { ZONING_ICON_MAP, CONSTRUCTION_ICON_MAP } from "./icon_map.svelte.js";
 
-import { getFeed, setFeed, setFeedShown } from '../states/feed.svelte.js';
+import { getFeed, setFeed, setFeedShown } from '$lib/states/feed.svelte.js';
 
 import { api } from "../utils/api.svelte.js";
 

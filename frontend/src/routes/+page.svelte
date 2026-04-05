@@ -2,8 +2,8 @@
   import Header from "$lib/components/header.svelte";
   import debounce from "lodash/debounce";
   import { onMount, onDestroy } from "svelte";
-  import { setFeed } from "../states/feed.svelte.js";
-  import { initMap, getMap } from "../states/map.svelte.js";
+  import { setFeed } from "$lib/states/feed.svelte.js";
+  import { initMap, getMap } from "$lib/states/map.svelte.js";
 
   import { api } from "../utils/api.svelte.js";
   import { isLoggedIn } from "../utils/utils.svelte.js";
