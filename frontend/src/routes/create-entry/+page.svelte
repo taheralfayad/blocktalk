@@ -6,7 +6,7 @@
   import Button from "$lib/components/button.svelte";
   import Tags from "$lib/globals/tags.json";
 
-  import { api } from "../../utils/api.svelte";
+  import { api } from "$lib/utils/api.svelte";
   import { page } from "$app/stores";
 
   let title = $state("");

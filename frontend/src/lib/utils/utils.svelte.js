@@ -3,7 +3,7 @@ import { ZONING_ICON_MAP, CONSTRUCTION_ICON_MAP } from "./icon_map.svelte.js";
 
 import { getFeed, setFeed, setFeedShown } from '$lib/states/feed.svelte.js';
 
-import { api } from "../utils/api.svelte.js";
+import { api } from "$lib/utils/api.svelte.js";
 
 export const isLoggedIn = async () => {
   try {

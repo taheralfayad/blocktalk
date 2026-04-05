@@ -4,7 +4,7 @@
   import Input from "$lib/components/login/input.svelte";
   import Retvrn from "$lib/components/retvrn.svelte";
 
-  import { api } from "../../utils/api.svelte";
+  import { api } from "$lib/utils/api.svelte";
 
   let isLogin = $state(true);
   let username = $state("");

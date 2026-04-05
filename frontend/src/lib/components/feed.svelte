@@ -7,7 +7,7 @@
   } from "$lib/states/searchBarState.svelte.js";
   import { fly } from "svelte/transition";
 
-  import { api } from "../utils/api.svelte.js";
+  import { api } from "$lib/utils/api.svelte.js";
 
   import {
     getFeedShown,

@@ -5,8 +5,8 @@
   import { setFeed } from "$lib/states/feed.svelte.js";
   import { initMap, getMap } from "$lib/states/map.svelte.js";
 
-  import { api } from "../utils/api.svelte.js";
-  import { isLoggedIn } from "../utils/utils.svelte.js";
+  import { api } from "$lib/utils/api.svelte.js";
+  import { isLoggedIn } from "$lib/utils/utils.svelte.js";
   import { goto } from "$app/navigation";
 
   let refreshToken = async () => {

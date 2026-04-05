@@ -1,7 +1,7 @@
 import { getMap } from './map.svelte.js';
 import maplibregl from 'maplibre-gl';
 
-import { addLogoMarker } from "../utils/utils.svelte.js";
+import { addLogoMarker } from "$lib/utils/utils.svelte.js";
 
 let feed = $state([]);
 let feedShown = $state(false)
