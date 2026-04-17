@@ -280,7 +280,7 @@ func RetrieveCity(c *gin.Context, db *sql.DB) {
 
 	var cities []data.City
 
-	jsonFile, err := os.Open("/app/static/us_cities.json")
+	jsonFile, err := os.Open(os.Getenv("CITIES_FILE"))
 	if err != nil {
 		messages.InternalServerError(c, err)
 		return
