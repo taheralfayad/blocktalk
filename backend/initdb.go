@@ -2,10 +2,18 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 )
 
 func initDB() (*sql.DB, error) {
-	connStr := os.Getenv("DATABASE_URL") // Ex: "postgres://user:pass@localhost:5432/dbname?sslmode=disable"
+	connStr := fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
+	)
 	return sql.Open("postgres", connStr)
 }
