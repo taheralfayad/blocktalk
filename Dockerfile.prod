@@ -19,6 +19,7 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/server server
+COPY --from=builder /app/scripts scripts
 COPY --from=builder /app/frontend/ ./assets
 COPY --from=builder /app/us_cities.json ./assets/us_cities.json
 EXPOSE 8080
