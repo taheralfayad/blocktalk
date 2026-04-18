@@ -13,7 +13,7 @@ export function initMap(container) {
     touchZoomRotate: false
   });
 
-  map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
   return map;
 }
