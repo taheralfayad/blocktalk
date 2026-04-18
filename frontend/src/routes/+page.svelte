@@ -56,10 +56,10 @@
       retrieveEntries(data);
     }, 1500);
 
-    mapInstance.on("click", (e) => {
+    mapInstance.on("click", async (e) => {
       const { lng, lat } = e.lngLat;
 
-      if (isLoggedIn()) {
+      if (await isLoggedIn()) {
         goto(`/create-entry?lat=${lat}&lng=${lng}`);
       } else {
         console.log("fuck you");
