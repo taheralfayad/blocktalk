@@ -8,61 +8,59 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/lib/pq"
-
 	data "backend/api/v1/data"
 	messages "backend/api/v1/messages"
 	utils "backend/api/v1/utils"
 )
 
-func CreateUser(c *gin.Context, db *sql.DB) {
-	var payload data.CreateUserRequest
-
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		messages.InternalServerError(c, err)
-		return
-	}
-
-	hashedPassword, err := utils.HashPassword(payload.Password)
-	if err != nil {
-		messages.InternalServerError(c, err)
-		return
-	}
-
-	_, err = db.Exec(`
-		INSERT INTO users (username, first_name, last_name, password, email, phone_number)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, payload.Username, payload.FirstName, payload.LastName, hashedPassword, payload.Email, payload.PhoneNumber)
-	if err != nil {
-		if err, ok := err.(*pq.Error); ok && err.Code == "23505" {
-			messages.StatusConflict(c, err)
-		}
-
-		messages.InternalServerError(c, err)
-	}
-
-	accessToken, accessTokenExpDate, err := utils.GenerateAccessToken(payload.Username)
-	if err != nil {
-		messages.InternalServerError(c, err)
-		return
-	}
-
-	refreshToken, refreshTokenExpDate, err := utils.GenerateRefreshToken(payload.Username)
-	if err != nil {
-		messages.InternalServerError(c, err)
-		return
-	}
-
-	utils.SetCookies(
-		c,
-		accessToken,
-		refreshToken,
-		int(accessTokenExpDate),
-		int(refreshTokenExpDate),
-	)
-
-	messages.StatusOk(c, "User has been successfully created.")
-}
+// func CreateUser(c *gin.Context, db *sql.DB) {
+// 	var payload data.CreateUserRequest
+//
+// 	if err := c.ShouldBindJSON(&payload); err != nil {
+// 		messages.InternalServerError(c, err)
+// 		return
+// 	}
+//
+// 	hashedPassword, err := utils.HashPassword(payload.Password)
+// 	if err != nil {
+// 		messages.InternalServerError(c, err)
+// 		return
+// 	}
+//
+// 	_, err = db.Exec(`
+// 		INSERT INTO users (username, first_name, last_name, password, email, phone_number)
+// 		VALUES ($1, $2, $3, $4, $5, $6)
+// 	`, payload.Username, payload.FirstName, payload.LastName, hashedPassword, payload.Email, payload.PhoneNumber)
+// 	if err != nil {
+// 		if err, ok := err.(*pq.Error); ok && err.Code == "23505" {
+// 			messages.StatusConflict(c, err)
+// 		}
+//
+// 		messages.InternalServerError(c, err)
+// 	}
+//
+// 	accessToken, accessTokenExpDate, err := utils.GenerateAccessToken(payload.Username)
+// 	if err != nil {
+// 		messages.InternalServerError(c, err)
+// 		return
+// 	}
+//
+// 	refreshToken, refreshTokenExpDate, err := utils.GenerateRefreshToken(payload.Username)
+// 	if err != nil {
+// 		messages.InternalServerError(c, err)
+// 		return
+// 	}
+//
+// 	utils.SetCookies(
+// 		c,
+// 		accessToken,
+// 		refreshToken,
+// 		int(accessTokenExpDate),
+// 		int(refreshTokenExpDate),
+// 	)
+//
+// 	messages.StatusOk(c, "User has been successfully created.")
+// }
 
 func LoginUser(c *gin.Context, db *sql.DB) {
 	var payload data.LoginRequest

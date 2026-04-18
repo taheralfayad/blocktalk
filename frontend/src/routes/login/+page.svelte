@@ -141,14 +141,14 @@
         </form>
 
         <div class="mt-6 text-center">
-          <button
-            onclick={toggleMode}
-            class="on:cursor-pointer text-sm hover:underline"
-          >
-            {isLogin
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Login"}
-          </button>
+          <!-- <button -->
+          <!--   onclick={toggleMode} -->
+          <!--   class="on:cursor-pointer text-sm hover:underline" -->
+          <!-- > -->
+          <!--   {isLogin -->
+          <!--     ? "Don't have an account? Sign up" -->
+          <!--     : "Already have an account? Login"} -->
+          <!-- </button> -->
         </div>
       </div>
     </div>
