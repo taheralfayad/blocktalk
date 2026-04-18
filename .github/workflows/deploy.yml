@@ -1,0 +1,21 @@
+name: Deploy to server
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            export PATH=$PATH:/snap/bin
+            cd ${{ secrets.APP_DIR }}
+            git pull origin main
+            docker compose stop
+            docker compose -f docker-compose.prod.yml up -d --build
+
