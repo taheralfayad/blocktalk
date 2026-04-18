@@ -8,7 +8,9 @@ export function initMap(container) {
     style: 'https://tiles.openfreemap.org/styles/liberty',
     center: [-81.3792, 28.5383],
     zoom: 10,
-    attributionControl: false
+    attributionControl: false,
+    dragRotate: false,
+    touchZoomRotate: false
   });
 
   map.addControl(new maplibregl.NavigationControl(), 'top-right');
