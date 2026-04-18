@@ -39,7 +39,6 @@
       const zoom = mapInstance.getZoom();
 
       if (zoom < MIN_QUERY_ZOOM) {
-        console.log("Zoomed out too far — skipping query");
         setFeed([]);
         return;
       }
@@ -61,8 +60,6 @@
 
       if (await isLoggedIn()) {
         goto(`/create-entry?lat=${lat}&lng=${lng}`);
-      } else {
-        console.log("fuck you");
       }
     });
 
@@ -73,7 +70,6 @@
         handleMovement();
       });
       mapInstance.on("moveend", () => {
-        console.log("hello?");
         handleMovement();
       });
 
