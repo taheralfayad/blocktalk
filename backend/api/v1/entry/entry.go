@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -271,7 +272,7 @@ func RetrieveEntriesWithinVisibleBounds(c *gin.Context, db *sql.DB) {
 }
 
 func RetrieveCity(c *gin.Context, db *sql.DB) {
-	query := c.DefaultQuery("city", "")
+	query := strings.ToLower(c.DefaultQuery("city", ""))
 
 	if query == "" {
 		messages.StatusBadRequest(c, errors.New("City not found"))
@@ -299,7 +300,7 @@ func RetrieveCity(c *gin.Context, db *sql.DB) {
 	var cityNames []string
 
 	for _, city := range cities {
-		cityNames = append(cityNames, city.Name)
+		cityNames = append(cityNames, city.SearchTerm)
 	}
 
 	matches := fuzzy.RankFind(query, cityNames)
@@ -312,7 +313,7 @@ func RetrieveCity(c *gin.Context, db *sql.DB) {
 
 	cityByName := make(map[string]data.City)
 	for _, city := range cities {
-		cityByName[city.Name] = city
+		cityByName[city.SearchTerm] = city
 	}
 
 	for _, match := range matches {

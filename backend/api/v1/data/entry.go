@@ -107,6 +107,7 @@ type City struct {
 	Source       string  `json:"source"`
 	Military     bool    `json:"military"`
 	Incorporated bool    `json:"incorporated"`
+	SearchTerm   string  `json:"search_term"`
 }
 
 type FeedQuery struct {
