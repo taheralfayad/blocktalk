@@ -1,12 +1,13 @@
 <script>
-  let { 
+  let {
     value = $bindable(),
     id,
     label,
     placeholder,
     handleInput,
-    type = 'text',
-    textarea = false
+    type = "text",
+    textarea = false,
+    onFocus,
   } = $props();
 </script>
 
@@ -18,9 +19,9 @@
 
 {#if textarea}
   <textarea
-    bind:value={value}
-    id={id}
-    placeholder={placeholder}
+    bind:value
+    {id}
+    {placeholder}
     oninput={handleInput}
     required
     class="
@@ -36,12 +37,13 @@
   />
 {:else}
   <input
-    bind:value={value}
-    id={id}
-    type={type}
-    placeholder={placeholder}
+    bind:value
+    {id}
+    {type}
+    {placeholder}
     oninput={handleInput}
     required
+    onfocus={onFocus}
     class="
       w-full px-3 py-2 text-sm
       rounded-xl border border-gray-300

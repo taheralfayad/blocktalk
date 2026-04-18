@@ -13,7 +13,8 @@
   let suggestions = $state([]);
   let distanceValue = $state(getDistance());
   let searchValue = $state(getLocationSearchValue());
-  const suggestionsHidden = $derived(suggestions.length === 0);
+  let isFocused = $state(false);
+  const suggestionsHidden = $derived(!isFocused);
 
   $effect(() => {
     setDistance(distanceValue);
@@ -59,5 +60,7 @@
   suggestions={suggestions.map((suggestion) => suggestion.city)}
   {handleInput}
   selectSuggestion={selectCity}
+  onFocus={() => (isFocused = true)}
+  onClickOutside={() => (isFocused = false)}
   bind:searchValue
 />

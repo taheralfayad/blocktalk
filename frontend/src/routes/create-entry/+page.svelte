@@ -20,8 +20,9 @@
   let success = $state(false);
   let submitting = $state(false);
   let suggestions = $state([]);
+  let isFocused = $state(false);
 
-  const suggestionsHidden = $derived(suggestions.length === 0);
+  const suggestionsHidden = $derived(!isFocused);
 
   let reverseGeocode = async (lat, lon) => {
     const res = await fetch(
@@ -167,6 +168,8 @@
                 handleInput={handleLocationAutosuggestion}
                 selectSuggestion={handleSelectSuggestion}
                 bind:searchValue={location}
+                onClickOutside={() => (isFocused = false)}
+                onFocus={() => (isFocused = true)}
               />
             </div>
             <Button
