@@ -1,5 +1,5 @@
 services:
-  backend:
+  blocktalk_backend:
     build: ./backend/
     ports: 
       - "8080:8080"
@@ -7,11 +7,13 @@ services:
       - ./backend/:/app
     command: ["air"]
     depends_on:
-      - database
+      - blocktalk_database
     env_file:
       - .env
+    networks:
+      - taher
 
-  database:
+  blocktalk_database:
     image: postgis/postgis:15-3.3
     restart: always
     environment:
@@ -22,8 +24,10 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - taher
 
-  frontend:
+  blocktalk_frontend:
     build: ./frontend
     ports:
       - "5173:5173"
@@ -32,11 +36,13 @@ services:
       - /app/node_modules
     env_file:
       - .env
+    networks:
+      - taher
 
-  migrate:
+  blocktalk_migrate:
     image: migrate/migrate
     depends_on:
-      - database
+      - blocktalk_database
     volumes:
       - ./backend/migrations:/migrations
     entrypoint:
@@ -46,6 +52,12 @@ services:
         "-database", "postgres://postgres:postgres@database:5432/postgres?sslmode=disable"
       ]
     command: ["up"]
+    networks:
+      - taher
 
 volumes:
   postgres_data:
+
+networks:
+  taher:
+    external: true

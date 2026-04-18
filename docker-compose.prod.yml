@@ -1,0 +1,59 @@
+services:
+  blocktalk_backend:
+    build:
+      dockerfile: Dockerfile.prod
+    environment:
+      - GIN_ENV=production
+      - GIN_MODE=release
+    env_file:
+        - .env
+    depends_on:
+      blocktalk_db:
+        condition: service_healthy
+      blocktalk_migrate:
+        condition: service_completed_successfully
+    networks:
+    - taher
+
+  blocktalk_db:
+    image: postgis/postgis:15-3.3
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+    - taher
+
+  blocktalk_migrate:
+    image: migrate/migrate
+    volumes:
+      - ./backend/migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path", "/migrations",
+        "-database", "postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable"
+      ]
+    command: ["up"]
+    env_file:
+      - .env
+    depends_on:
+      blocktalk_db:
+        condition: service_healthy
+    networks:
+      - taher
+
+
+volumes:
+  postgres_data:
+
+networks:
+  taher:
+    external: true
+
