@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -97,6 +98,14 @@ func handleRequests() {
 	entryPrivilegedRoutes.POST("/edit-entry", func(c *gin.Context) {
 		entry.EditEntry(c, db)
 	})
+
+	if os.Getenv("GIN_ENV") == "production" {
+		r.Static("/assets", "/app/assets")
+		gin.DefaultWriter = os.Stderr
+		gin.DefaultErrorWriter = os.Stderr
+		r.Use(gin.Logger())
+		r.Use(gin.Recovery())
+	}
 
 	r.Run()
 }
