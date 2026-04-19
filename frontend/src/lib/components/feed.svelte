@@ -84,13 +84,6 @@
       </div>
 
       <div class="border-t border-gray-200">
-        <a
-          href="/about"
-          class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
-        >
-          About
-        </a>
-
         {#if isLoggedIn}
           <a
             href="/create-entry"
