@@ -3,6 +3,7 @@
   {"name": "Multi Family", "classification": "Zoning"},
   {"name": "Commercial", "classification": "Zoning"},
   {"name": "Industrial", "classification": "Zoning"},
+  {"name": "Public Works", "classification": "Zoning"},
   {"name": "Construction Started", "classification": "Progress"},
   {"name": "Construction Completed", "classification": "Progress"}
 ]
