@@ -10,10 +10,14 @@ export function initMap(container) {
     zoom: 10,
     attributionControl: false,
     dragRotate: false,
-    touchZoomRotate: false
+    touchZoomRotate: true
   });
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+  map.on('load', () => {
+    map.touchZoomRotate.disableRotation();
+  })
 
   return map;
 }
