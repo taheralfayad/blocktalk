@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from "svelte";
+
   import Retvrn from "$lib/components/retvrn.svelte";
   import Input from "$lib/components/input.svelte";
   import SelectInput from "$lib/components/select.svelte";
@@ -7,12 +9,12 @@
   import Tags from "$lib/globals/tags.json";
 
   import { api } from "$lib/utils/api.svelte";
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
 
   let title = $state("");
   let location = $state("");
-  let latitude = $state(parseFloat($page.url.searchParams.get("lat")) || "");
-  let longitude = $state(parseFloat($page.url.searchParams.get("lng")) || "");
+  let latitude = $state(parseFloat(page.url.searchParams.get("lat")) || "");
+  let longitude = $state(parseFloat(page.url.searchParams.get("lng")) || "");
   let zoningTag = $state("");
   let progressTag = $state("");
   let description = $state("");
@@ -33,7 +35,7 @@
     location = address;
   };
 
-  $effect(() => {
+  onMount(() => {
     if (latitude && longitude) {
       reverseGeocode(latitude, longitude);
     }
@@ -118,7 +120,7 @@
 </script>
 
 <div
-  class="flex min-h-screen items-start justify-center bg-gradient-to-b from-slate-50 to-white px-4 py-12"
+  class="flex min-h-dvh items-start justify-center bg-gradient-to-b from-slate-50 to-white px-4 py-12"
 >
   <div class="w-full max-w-2xl">
     <div class="mb-6 flex items-center gap-3">
