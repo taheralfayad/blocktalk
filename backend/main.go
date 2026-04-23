@@ -66,9 +66,9 @@ func handleRequests() {
 	entryPrivilegedRoutes := r.Group("/entries")
 	entryPrivilegedRoutes.Use(AuthMiddleware())
 
-	// userRoutes.POST("/create-user", func(c *gin.Context) {
-	// 	users.CreateUser(c, db)
-	// })
+	userRoutes.POST("/create-user", RequestLogger(db, "UserController", "CreateUser"), func(c *gin.Context) {
+		users.CreateUser(c, db)
+	})
 
 	userRoutes.POST("/login", func(c *gin.Context) {
 		users.LoginUser(c, db)
