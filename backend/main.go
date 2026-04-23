@@ -20,6 +20,13 @@ import (
 
 var db *sql.DB
 
+func RequestLogger(db *sql.DB, controller string, action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		utils.LogRequest(c, db, controller, action)
+	}
+}
+
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("access_token")
