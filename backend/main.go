@@ -90,7 +90,7 @@ func handleRequests() {
 		entry.RetrieveFeed(c, db)
 	})
 
-	entryPrivilegedRoutes.POST("/create-entry", func(c *gin.Context) {
+	entryPrivilegedRoutes.POST("/create-entry", RequestLogger(db, "EntryController", "CreateEntry"), func(c *gin.Context) {
 		entry.CreateEntry(c, db)
 	})
 
