@@ -16,6 +16,7 @@
   let confirmPassword = $state("");
   let errorMessage = $state("");
   let isLoading = $state(false);
+  let verificationChoice = $state("email");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -38,6 +39,13 @@
       } else {
         if (password !== confirmPassword) {
           errorMessage = "Passwords do not match";
+          isLoading = false;
+          return;
+        }
+
+        if (!/^\+[1-9]\d{1,14}$/.test(phoneNumber)) {
+          errorMessage =
+            "Phone number must be in E.164 format (e.g. +12345678910)";
           isLoading = false;
           return;
         }
@@ -82,7 +90,9 @@
 
 <div>
   <Retvrn />
-  <div class="flex min-h-screen items-center justify-center bg-white p-4">
+  <div
+    class="flex min-h-dvh items-center justify-center bg-white p-4 overflow-y-auto"
+  >
     <div class="w-full max-w-md">
       <div class="border border-black p-8">
         <h1 class="mb-6 text-center text-2xl font-bold">
@@ -109,6 +119,9 @@
               class="w-full border border-black px-3 py-2 focus:ring-1 focus:ring-black focus:outline-none"
               required
             />
+            {#if !isLogin}
+              <small>minimum 8 characters</small>
+            {/if}
           </div>
 
           {#if !isLogin}
@@ -119,15 +132,48 @@
                 bind:value={confirmPassword}
                 label="Confirm Password"
               />
-              <Input bind:value={email} id="email" label="Email" />
               <Input bind:value={firstName} id="firstName" label="First Name" />
               <Input bind:value={lastName} id="lastName" label="Last Name" />
-              <Input
-                type="tel"
-                id="phoneNumber"
-                bind:value={phoneNumber}
-                label="Phone Number"
-              />
+              <fieldset>
+                <legend>Select a verification method</legend>
+                <div>
+                  <input
+                    type="radio"
+                    id="email"
+                    name="verificationMethod"
+                    value="email"
+                    bind:group={verificationChoice}
+                    checked
+                  />
+                  <label for="email">Email</label>
+                </div>
+                <div>
+                  <input
+                    type="radio"
+                    id="phoneNumber"
+                    name="verificationMethod"
+                    value="phoneNumber"
+                    bind:group={verificationChoice}
+                  />
+                  <label for="phoneNumber">Phone Number</label>
+                </div>
+              </fieldset>
+              {#if verificationChoice === "email"}
+                <Input
+                  type="email"
+                  bind:value={email}
+                  id="email"
+                  label="Email"
+                />
+              {:else if verificationChoice === "phoneNumber"}
+                <Input
+                  type="tel"
+                  id="phoneNumber"
+                  bind:value={phoneNumber}
+                  label="Phone Number"
+                />
+                <small>eg. +12345678910</small>
+              {/if}
             </div>
           {/if}
 
@@ -141,14 +187,14 @@
         </form>
 
         <div class="mt-6 text-center">
-          <!-- <button -->
-          <!--   onclick={toggleMode} -->
-          <!--   class="on:cursor-pointer text-sm hover:underline" -->
-          <!-- > -->
-          <!--   {isLogin -->
-          <!--     ? "Don't have an account? Sign up" -->
-          <!--     : "Already have an account? Login"} -->
-          <!-- </button> -->
+          <button
+            onclick={toggleMode}
+            class="on:cursor-pointer text-sm hover:underline"
+          >
+            {isLogin
+              ? "Don't have an account? Sign up"
+              : "Already have an account? Login"}
+          </button>
         </div>
       </div>
     </div>
