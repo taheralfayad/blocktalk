@@ -273,3 +273,16 @@ func SendWebhook(
 
 	return nil
 }
+
+func UserIsVerified(username string, db *sql.DB) (bool, error) {
+	var isVerified bool
+	err := db.QueryRow(`
+        SELECT is_verified
+        FROM users
+        WHERE username = $1
+    `, username).Scan(&isVerified)
+	if err != nil {
+		return false, err
+	}
+	return isVerified, nil
+}

@@ -175,8 +175,28 @@ func RefreshToken(c *gin.Context) {
 	messages.StatusOk(c, "Access token has been refreshed!")
 }
 
-func Me(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "ok buddy come on in",
-	})
+func Me(c *gin.Context, db *sql.DB) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		messages.StatusUnauthorized(c, err)
+		return
+	}
+
+	username, err := utils.ParseTokenAndReturnUsername(refreshToken)
+	if err != nil {
+		messages.StatusUnauthorized(c, err)
+		return
+	}
+
+	var me data.Me
+
+	verified, err := utils.UserIsVerified(username, db)
+	if err != nil {
+		messages.StatusUnauthorized(c, err)
+		return
+	}
+
+	me.IsVerified = verified
+
+	c.JSON(http.StatusOK, me)
 }
