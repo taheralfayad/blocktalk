@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 
 	entry "backend/api/v1/entry"
 	messages "backend/api/v1/messages"
@@ -20,7 +20,14 @@ import (
 
 var db *sql.DB
 
-func AuthMiddleware() gin.HandlerFunc {
+func RequestLogger(db *sql.DB, controller string, action string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		utils.LogRequest(c, db, controller, action)
+	}
+}
+
+func AuthMiddleware(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, err := c.Cookie("access_token")
 		if err != nil {
@@ -28,13 +35,19 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token, err := jwt.Parse(cookie, func(token *jwt.Token) (interface{}, error) {
-			return utils.JwtSecret, nil
-		})
-
-		if err != nil || !token.Valid {
-			log.Printf("Invalid token: %v", err)
+		username, err := utils.ParseTokenAndReturnUsername(cookie)
+		if err != nil {
 			messages.StatusUnauthorized(c, err)
+			return
+		}
+
+		isVerified, err := utils.UserIsVerified(username, db)
+		if err != nil {
+			messages.StatusUnauthorized(c, err)
+			return
+		}
+		if !isVerified {
+			messages.StatusUnauthorized(c, errors.New("user is not verified"))
 			return
 		}
 
@@ -54,14 +67,14 @@ func handleRequests() {
 
 	userRoutes := r.Group("/users")
 	userRoutesPrivileged := r.Group("/users")
-	userRoutesPrivileged.Use(AuthMiddleware())
+	userRoutesPrivileged.Use(AuthMiddleware(db))
 	entryRoutes := r.Group("/entries")
 	entryPrivilegedRoutes := r.Group("/entries")
-	entryPrivilegedRoutes.Use(AuthMiddleware())
+	entryPrivilegedRoutes.Use(AuthMiddleware(db))
 
-	// userRoutes.POST("/create-user", func(c *gin.Context) {
-	// 	users.CreateUser(c, db)
-	// })
+	userRoutes.POST("/create-user", RequestLogger(db, "UserController", "CreateUser"), func(c *gin.Context) {
+		users.CreateUser(c, db)
+	})
 
 	userRoutes.POST("/login", func(c *gin.Context) {
 		users.LoginUser(c, db)
@@ -69,7 +82,9 @@ func handleRequests() {
 
 	userRoutes.POST("/refresh-token", users.RefreshToken)
 
-	userRoutesPrivileged.GET("/me", users.Me)
+	userRoutes.POST("/me", func(c *gin.Context) {
+		users.Me(c, db)
+	})
 
 	entryRoutes.POST("/retrieve-entries-within-visible-bounds", func(c *gin.Context) {
 		entry.RetrieveEntriesWithinVisibleBounds(c, db)
@@ -83,7 +98,7 @@ func handleRequests() {
 		entry.RetrieveFeed(c, db)
 	})
 
-	entryPrivilegedRoutes.POST("/create-entry", func(c *gin.Context) {
+	entryPrivilegedRoutes.POST("/create-entry", RequestLogger(db, "EntryController", "CreateEntry"), func(c *gin.Context) {
 		entry.CreateEntry(c, db)
 	})
 

@@ -7,10 +7,17 @@ import { api } from "$lib/utils/api.svelte.js";
 
 export const isLoggedIn = async () => {
   try {
-    await api.get("/users/me");
-    return true;
+    const data = await api.post("/users/me");
+
+    return {
+      userIsLoggedIn: true,
+      userIsVerified: !!(data && data.is_verified)
+    }
   } catch (error) {
-    return false;
+    return {
+      userIsLoggedIn: false,
+      userIsVerified: false,
+    }
   }
 }
 

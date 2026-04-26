@@ -9,6 +9,8 @@
 
   import { api } from "$lib/utils/api.svelte.js";
 
+  import { isLoggedIn } from "../utils/utils.svelte";
+
   import {
     getFeedShown,
     setFeedShown,
@@ -28,17 +30,15 @@
     setFeed(clearedFeed);
     setFeedShown(false);
   };
-  let isLoggedIn = $state(false);
+  let loggedIn = $state(false);
+  let verified = $state(false);
 
   const getIsLoggedIn = async () => {
     try {
-      await api.get("/users/me");
-      isLoggedIn = true;
+      const loggedInData = await isLoggedIn();
+      loggedIn = loggedInData.userIsLoggedIn;
+      verified = loggedInData.userIsVerified;
     } catch (error) {
-      if (error.status === 401) {
-        return false;
-      }
-
       return false;
     }
   };
@@ -84,12 +84,19 @@
       </div>
 
       <div class="border-t border-gray-200">
-        {#if isLoggedIn}
+        {#if loggedIn && verified}
           <a
             href="/create-entry"
             class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
           >
             Participate
+          </a>
+        {:else if loggedIn && !verified}
+          <a
+            href="/verification-page"
+            class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
+          >
+            Get Verified!
           </a>
         {:else}
           <a

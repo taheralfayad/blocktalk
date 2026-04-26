@@ -58,7 +58,9 @@
     mapInstance.on("click", async (e) => {
       const { lng, lat } = e.lngLat;
 
-      if (await isLoggedIn()) {
+      const logInData = await isLoggedIn();
+
+      if (!!(logInData.userIsLoggedIn && logInData.userIsVerified)) {
         goto(`/create-entry?lat=${lat}&lng=${lng}`);
       }
     });

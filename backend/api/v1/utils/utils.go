@@ -1,11 +1,15 @@
 package utils
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"time"
 
+	data "backend/api/v1/data"
 	structs "backend/api/v1/structs"
 
 	"github.com/gin-gonic/gin"
@@ -209,4 +213,76 @@ func SetAuthCookie(
 		true,
 		true,
 	)
+}
+
+func LogRequest(
+	c *gin.Context,
+	db *sql.DB,
+	controller string,
+	action string,
+) {
+	go func() {
+		db.Exec(`
+            INSERT INTO
+            request_log (url, ip_address, http_method, controller, action)
+            VALUES ($1, $2, $3, $4, $5)
+        `, c.Request.URL.String(), c.ClientIP(), c.Request.Method, controller, action)
+	}()
+}
+
+func SendWebhook(
+	controller string,
+	embedColor int,
+	fields []data.Field,
+) error {
+	type Author struct {
+		Name string `json:"name"`
+	}
+
+	type Embed struct {
+		Color  int          `json:"color"`
+		Author Author       `json:"author"`
+		Title  string       `json:"title"`
+		Fields []data.Field `json:"fields"`
+	}
+
+	type DiscordMessage struct {
+		Embeds []Embed `json:"embeds"`
+	}
+
+	discordMessage := DiscordMessage{
+		Embeds: []Embed{
+			{
+				Color:  embedColor,
+				Title:  fmt.Sprintf("New %s", controller),
+				Fields: fields,
+			},
+		},
+	}
+
+	jsonData, err := json.Marshal(discordMessage)
+	url := os.Getenv("DISCORD_WEBHOOK_URL")
+	if err != nil {
+		return err
+	}
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+func UserIsVerified(username string, db *sql.DB) (bool, error) {
+	var isVerified bool
+	err := db.QueryRow(`
+        SELECT is_verified
+        FROM users
+        WHERE username = $1
+    `, username).Scan(&isVerified)
+	if err != nil {
+		return false, err
+	}
+	return isVerified, nil
 }

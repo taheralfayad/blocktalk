@@ -2,6 +2,12 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
+@layer base {
+  ol, ul, menu {
+    list-style: revert;
+  }
+}
+
 html, body {
   height: 100%;
   margin: 0;

@@ -161,6 +161,41 @@ func CreateEntry(c *gin.Context, db *sql.DB) {
 	}
 
 	utils.InsertTagAndEntryRevisionAssociation(tx, entryRevisionId, payload.Tags)
+
+	fields := []data.Field{
+		{
+			Name:  "Title",
+			Value: payload.Title,
+		},
+		{
+			Name:  "Location",
+			Value: payload.Location,
+		},
+		{
+			Name:  "Description",
+			Value: payload.Description,
+		},
+		{
+			Name:  "Submitted By:",
+			Value: username,
+		},
+	}
+
+	for _, value := range payload.Tags {
+		fields = append(fields, data.Field{
+			Name:  value.Classification,
+			Value: value.Name,
+		})
+	}
+
+	go func() {
+		utils.SendWebhook(
+			"Entry",
+			9033364,
+			fields,
+		)
+	}()
+
 	messages.StatusCreated(c, "Entry created successfully!")
 }
 
