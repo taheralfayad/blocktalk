@@ -6,5 +6,6 @@
   {"name": "Public Works", "classification": "Zoning"},
   {"name": "Office Building", "classification": "Zoning"},
   {"name": "Construction Started", "classification": "Progress"},
-  {"name": "Construction Completed", "classification": "Progress"}
+  {"name": "Construction Completed", "classification": "Progress"},
+  {"name": "No Longer in Service", "classification": "Progress"}
 ]
