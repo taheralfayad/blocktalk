@@ -58,9 +58,13 @@
           first_name: firstName,
           last_name: lastName,
           password,
-          email,
-          phone_number: phoneNumber,
         };
+
+        if (verificationChoice === "phoneNumber") {
+          data.phone_number = phoneNumber;
+        } else {
+          data.email = email;
+        }
 
         await api.post("/users/create-user", data);
 

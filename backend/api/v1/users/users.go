@@ -35,9 +35,11 @@ func CreateUser(c *gin.Context, db *sql.DB) {
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok && err.Code == "23505" {
 			messages.StatusConflict(c, err)
+			return
 		}
 
 		messages.InternalServerError(c, err)
+		return
 	}
 
 	accessToken, accessTokenExpDate, err := utils.GenerateAccessToken(payload.Username)
