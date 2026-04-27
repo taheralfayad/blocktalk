@@ -91,10 +91,10 @@
   }
 </script>
 
-<div>
+<div class="flex flex-col min-h-screen">
   <Retvrn />
   <div
-    class="flex min-h-dvh items-center justify-center bg-white p-4 overflow-y-auto"
+    class="flex flex-1 items-start justify-center bg-white p-4 pb-8 overflow-y-auto max-h-screen"
   >
     <div class="w-full max-w-md">
       <div class="border border-black p-8">
