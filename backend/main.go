@@ -116,6 +116,9 @@ func handleRequests() {
 
 	if os.Getenv("GIN_ENV") == "production" {
 		r.Static("/assets", "/app/assets")
+		r.Static("/login", "/app/assets")
+		r.Static("/create-entry", "/app/assets")
+		r.Static("/verification-page", "/app/assets")
 		gin.DefaultWriter = os.Stderr
 		gin.DefaultErrorWriter = os.Stderr
 		r.Use(gin.Logger())
