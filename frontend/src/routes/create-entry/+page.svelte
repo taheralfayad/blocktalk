@@ -122,7 +122,11 @@
 <div
   class="flex min-h-dvh items-start justify-center bg-gradient-to-b from-slate-50 to-white px-4 py-12"
 >
-  <div class="w-full max-w-2xl">
+  <!--- the margin bottom style is a hack to prevent ios safari navbar from hiding visual components. i literally hate apple so much  -->
+  <div
+    class="w-full max-w-2xl overflow-y-scroll"
+    style="margin-bottom: max(4rem, env(safe-area-inset-bottom) + 5rem)"
+  >
     <div class="mb-6 flex items-center gap-3">
       <Retvrn />
       <h1 class="text-2xl font-semibold text-slate-800">
@@ -160,25 +164,21 @@
           >
             Location *
           </label>
-          <div class="flex flex-row items-start gap-2">
-            <div class="flex-1">
-              <DropdownTextfield
-                {suggestionsHidden}
-                suggestions={suggestions.map(
-                  (suggestion) => suggestion.address,
-                )}
-                handleInput={handleLocationAutosuggestion}
-                selectSuggestion={handleSelectSuggestion}
-                bind:searchValue={location}
-                onClickOutside={() => (isFocused = false)}
-                onFocus={() => (isFocused = true)}
-              />
-            </div>
-            <Button
-              onClick={() => handleGetCurrentLocation()}
-              text="Get Current Location"
+          <div class="flex-1 mb-4">
+            <DropdownTextfield
+              {suggestionsHidden}
+              suggestions={suggestions.map((suggestion) => suggestion.address)}
+              handleInput={handleLocationAutosuggestion}
+              selectSuggestion={handleSelectSuggestion}
+              bind:searchValue={location}
+              onClickOutside={() => (isFocused = false)}
+              onFocus={() => (isFocused = true)}
             />
           </div>
+          <Button
+            onClick={() => handleGetCurrentLocation()}
+            text="Get Current Location"
+          />
         </div>
 
         <div class="sm:col-span-2">
@@ -289,10 +289,3 @@
     </form>
   </div>
 </div>
-
-<style>
-  /* tiny visual tweak: slightly reduce active button scale */
-  .active\:scale-98:active {
-    transform: scale(0.98);
-  }
-</style>
