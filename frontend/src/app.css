@@ -6,10 +6,12 @@
   ol, ul, menu {
     list-style: revert;
   }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+  }
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}

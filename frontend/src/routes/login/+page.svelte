@@ -95,12 +95,12 @@
   }
 </script>
 
-<div class="flex flex-col min-h-screen">
+<div class="flex flex-col">
   <Retvrn />
   <div
     class="flex flex-1 items-start justify-center bg-white p-4 pb-8 overflow-y-auto max-h-screen"
   >
-    <div class="w-full max-w-md">
+    <div class="w-full max-w-md mb-48">
       <div class="border border-black p-8">
         <h1 class="mb-6 text-center text-2xl font-bold">
           {isLogin ? "Login" : "Sign Up"}
