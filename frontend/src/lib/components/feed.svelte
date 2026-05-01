@@ -1,13 +1,7 @@
 <script lang="ts">
   import Entry from "$lib/components/entry.svelte";
   import rightArrow from "$lib/assets/right.svg";
-  import {
-    getDistance,
-    getLocationSearchValue,
-  } from "$lib/states/searchBarState.svelte.js";
   import { fly } from "svelte/transition";
-
-  import { api } from "$lib/utils/api.svelte.js";
 
   import { isLoggedIn } from "../utils/utils.svelte";
 
@@ -17,6 +11,10 @@
     getFeed,
     setFeed,
   } from "$lib/states/feed.svelte.js";
+
+  import NavbarLink from "$lib/design-system/navbar_link.svelte";
+
+  import { Check, LogIn, Smile, MapPinPlus } from "@lucide/svelte";
 
   let feedShown = $derived(getFeedShown());
   let feed: any[] = $state([]);
@@ -85,26 +83,23 @@
 
       <div class="border-t border-gray-200">
         {#if loggedIn && verified}
-          <a
-            href="/create-entry"
-            class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
-          >
-            Participate
-          </a>
+          <NavbarLink link="/create-entry" linkText="Participate">
+            <MapPinPlus />
+          </NavbarLink>
         {:else if loggedIn && !verified}
-          <a
-            href="/verification-page"
-            class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
-          >
-            Get Verified!
-          </a>
+          <NavbarLink link="/verification-page" linkText="Get Verified!">
+            <Check />
+          </NavbarLink>
         {:else}
-          <a
-            href="/login"
-            class="block w-full px-4 py-3 text-left font-semibold transition-colors hover:bg-gray-50"
-          >
-            Login
-          </a>
+          <NavbarLink link="/login" linkText="Login">
+            <LogIn />
+          </NavbarLink>
+        {/if}
+
+        {#if loggedIn}
+          <NavbarLink link="/user-profile" linkText="My Profile">
+            <Smile />
+          </NavbarLink>
         {/if}
       </div>
     </div>
