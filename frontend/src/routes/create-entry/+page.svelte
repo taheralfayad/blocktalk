@@ -119,32 +119,28 @@
   };
 </script>
 
-<div
-  class="flex min-h-dvh items-start justify-center bg-gradient-to-b from-slate-50 to-white px-4 py-12"
->
-  <!--- the margin bottom style is a hack to prevent ios safari navbar from hiding visual components. i literally hate apple so much  -->
-  <div
-    class="w-full max-w-2xl overflow-y-scroll"
-    style="margin-bottom: max(4rem, env(safe-area-inset-bottom) + 5rem)"
-  >
-    <div class="mb-6 flex items-center gap-3">
-      <Retvrn />
-      <h1 class="text-2xl font-semibold text-slate-800">
+<div class="flex flex-col max-h-screen overflow-y-auto">
+  <Retvrn />
+  <!--- doing this to force a scrollbar on phones, sorry gods of clean code ---->
+  <div class="mb-48">
+    <div class="text-center mb-4">
+      <h1 class="text-2xl font-semibold">
         Add an entry — help your neighbor know what's up
       </h1>
     </div>
-
-    <form
-      onsubmit={handleSubmit}
-      class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg sm:p-8"
+    <div
+      class="flex flex-col justify-center items-center gap-14 overflow-y-auto max-h-screen"
     >
-      <p class="mb-4 text-sm text-slate-500">
-        Share a short title, location and details. Fields marked with <span
-          class="font-medium">*</span
-        > are required.
-      </p>
+      <form
+        onsubmit={handleSubmit}
+        class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg sm:p-8"
+      >
+        <p class="mb-4 text-sm">
+          Share a short title, location and details. Fields marked with <span
+            class="font-medium">*</span
+          > are required.
+        </p>
 
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <Input
             bind:value={title}
@@ -164,7 +160,7 @@
           >
             Location *
           </label>
-          <div class="flex-1 mb-4">
+          <div class="mb-4">
             <DropdownTextfield
               {suggestionsHidden}
               suggestions={suggestions.map((suggestion) => suggestion.address)}
@@ -220,72 +216,72 @@
             aria-required="true"
           />
         </div>
-      </div>
 
-      <div class="mt-5 flex items-center justify-between gap-4">
-        <div>
-          {#if error}
-            <p class="text-sm text-red-600" role="alert">{error}</p>
-          {/if}
-          {#if success}
-            <p class="text-sm text-green-700" role="status">Saved ✓</p>
-          {/if}
-        </div>
+        <div class="mt-5 flex items-center justify-between gap-4">
+          <div>
+            {#if error}
+              <p class="text-sm text-red-600" role="alert">{error}</p>
+            {/if}
+            {#if success}
+              <p class="text-sm text-green-700" role="status">Saved ✓</p>
+            {/if}
+          </div>
 
-        <div class="ml-auto flex items-center gap-3">
-          <button
-            type="submit"
-            class="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 font-medium
+          <div class="ml-auto flex items-center gap-3">
+            <button
+              type="submit"
+              class="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 font-medium
                    text-white shadow-sm hover:cursor-pointer hover:bg-sky-700 focus:outline-none focus-visible:ring-4
                    focus-visible:ring-sky-200 active:scale-98"
-            aria-disabled={submitting}
-            disabled={submitting}
-          >
-            {#if submitting}
-              <svg
-                class="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                  class="opacity-25"
-                ></circle>
-                <path
-                  d="M4 12a8 8 0 018-8"
-                  stroke="currentColor"
-                  stroke-width="4"
-                  class="opacity-75"
-                ></path>
-              </svg>
-              Saving...
-            {:else}
-              Submit
-            {/if}
-          </button>
+              aria-disabled={submitting}
+              disabled={submitting}
+            >
+              {#if submitting}
+                <svg
+                  class="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                    class="opacity-25"
+                  ></circle>
+                  <path
+                    d="M4 12a8 8 0 018-8"
+                    stroke="currentColor"
+                    stroke-width="4"
+                    class="opacity-75"
+                  ></path>
+                </svg>
+                Saving...
+              {:else}
+                Submit
+              {/if}
+            </button>
 
-          <button
-            type="button"
-            class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:cursor-pointer hover:bg-slate-50"
-            onclick={() => {
-              title = "";
-              location = "";
-              description = "";
-              progressTag = "";
-              zoningTag = "";
-              error = "";
-              success = false;
-            }}
-          >
-            Reset
-          </button>
+            <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:cursor-pointer hover:bg-slate-50"
+              onclick={() => {
+                title = "";
+                location = "";
+                description = "";
+                progressTag = "";
+                zoningTag = "";
+                error = "";
+                success = false;
+              }}
+            >
+              Reset
+            </button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
