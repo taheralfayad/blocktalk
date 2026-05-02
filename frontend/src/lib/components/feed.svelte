@@ -6,6 +6,7 @@
     getLocationSearchValue,
   } from "$lib/states/searchBarState.svelte.js";
   import { fly } from "svelte/transition";
+  import { onMount } from "svelte";
 
   import { api } from "$lib/utils/api.svelte.js";
 
@@ -43,8 +44,8 @@
     }
   };
 
-  $effect(() => {
-    feed = getFeed();
+  onMount(() => {
+    feed = [...getFeed()];
     getIsLoggedIn();
   });
 </script>
