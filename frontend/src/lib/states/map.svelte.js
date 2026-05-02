@@ -24,6 +24,12 @@ export function initMap(container) {
 
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
+  map.addControl(new maplibregl.GeolocateControl({
+    positionOptions: { enableHighAccuracy: true },
+    trackUserLocation: true,
+    showAccuracyCircle: true
+  }), 'top-right');
+
   map.on('load', () => {
     map.touchZoomRotate.disableRotation();
   })
