@@ -2,6 +2,7 @@
   import Entry from "$lib/components/entry.svelte";
   import rightArrow from "$lib/assets/right.svg";
   import { fly } from "svelte/transition";
+  import { onMount } from "svelte";
 
   import { isLoggedIn } from "../utils/utils.svelte";
 
@@ -41,8 +42,8 @@
     }
   };
 
-  $effect(() => {
-    feed = getFeed();
+  onMount(() => {
+    feed = [...getFeed()];
     getIsLoggedIn();
   });
 </script>
