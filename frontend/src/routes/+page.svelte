@@ -52,6 +52,12 @@
         west: bounds.getWest(),
       };
 
+      const center = mapInstance.getCenter();
+      localStorage.setItem(
+        "userLocation",
+        JSON.stringify({ lng: center.lng, lat: center.lat }),
+      );
+
       retrieveEntries(data);
     }, 1500);
 
