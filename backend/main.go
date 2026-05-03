@@ -114,6 +114,10 @@ func handleRequests() {
 		entry.EditEntry(c, db)
 	})
 
+	entryPrivilegedRoutes.GET("/user-stats", func(c *gin.Context) {
+		entry.RetrieveUserStats(c, db)
+	})
+
 	if os.Getenv("GIN_ENV") == "production" {
 		r.Static("/assets", "/app/assets")
 		r.Static("/login", "/app/assets")

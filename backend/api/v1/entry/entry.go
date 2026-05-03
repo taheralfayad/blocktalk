@@ -677,3 +677,41 @@ func EditEntry(c *gin.Context, db *sql.DB) {
 
 	messages.StatusOk(c, "Entry edited successfully!")
 }
+
+func RetrieveUserStats(c *gin.Context, db *sql.DB) {
+	var response data.UserStats
+
+	cookie, err := c.Cookie("access_token")
+	if err != nil {
+		messages.InternalServerError(c, err)
+		return
+	}
+
+	userName, err := utils.ParseTokenAndReturnUsername(cookie)
+	if err != nil {
+		messages.InternalServerError(c, err)
+		return
+	}
+
+	response.Username = userName
+
+	var numEntries int
+	err = db.QueryRow(`
+			SELECT COUNT(*)
+			FROM entry
+			WHERE creator_id IN (SELECT id FROM users WHERE username = $1)
+	`, userName).Scan(&numEntries)
+	if err != nil {
+		messages.InternalServerError(c, err)
+		return
+	}
+
+	userNumEntries := data.UserStat{
+		Title: "User Entries",
+		Value: numEntries,
+	}
+
+	response.Stats = []data.UserStat{userNumEntries}
+
+	c.JSON(http.StatusOK, response)
+}

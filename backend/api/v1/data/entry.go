@@ -114,3 +114,13 @@ type FeedQuery struct {
 	Location string `form:"location" binding:"required"`
 	Distance string `form:"distance" binding:"required"`
 }
+
+type UserStat struct {
+	Title string `json:"title"`
+	Value int    `json:"value"`
+}
+
+type UserStats struct {
+	Username string     `json:"username"`
+	Stats    []UserStat `json:"stats`
+}
