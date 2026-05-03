@@ -12,6 +12,12 @@ export function initMap(container) {
     return [lng, lat];
   })() : ORLANDO;
 
+  maplibregl.setRTLTextPlugin(
+    'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.3.0/dist/mapbox-gl-rtl-text.js',
+    null,
+    true
+  );
+
   map = new maplibregl.Map({
     container,
     style: 'https://tiles.openfreemap.org/styles/liberty',
