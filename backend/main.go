@@ -7,15 +7,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 
 	entry "backend/api/v1/entry"
 	messages "backend/api/v1/messages"
 	users "backend/api/v1/users"
 	utils "backend/api/v1/utils"
+
+	data "backend/api/v1/data"
 )
 
 var db *sql.DB
@@ -57,6 +61,18 @@ func AuthMiddleware(db *sql.DB) gin.HandlerFunc {
 
 func handleRequests() {
 	r := gin.Default()
+
+	validate := validator.New()
+	validate.RegisterValidation("username_requirements", data.ValidateUsername)
+	validate.RegisterValidation("password_requirements", data.ValidatePassword)
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("username_requirements", data.ValidateUsername)
+	}
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("password_requirements", data.ValidatePassword)
+	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
