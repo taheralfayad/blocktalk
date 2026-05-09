@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -110,24 +111,12 @@ func handleRequests() {
 		entry.RetrieveCity(c, db)
 	})
 
-	entryRoutes.GET("/feed", func(c *gin.Context) {
-		entry.RetrieveFeed(c, db)
-	})
-
 	entryPrivilegedRoutes.POST("/create-entry", RequestLogger(db, "EntryController", "CreateEntry"), func(c *gin.Context) {
 		entry.CreateEntry(c, db)
 	})
 
 	entryPrivilegedRoutes.GET("/autocomplete-address", func(c *gin.Context) {
 		entry.AutocompleteAddress(c, db)
-	})
-
-	entryPrivilegedRoutes.POST("/vote-entry", func(c *gin.Context) {
-		entry.VoteEntry(c, db)
-	})
-
-	entryPrivilegedRoutes.POST("/edit-entry", func(c *gin.Context) {
-		entry.EditEntry(c, db)
 	})
 
 	if os.Getenv("GIN_ENV") == "production" {
@@ -141,7 +130,10 @@ func handleRequests() {
 		r.Use(gin.Recovery())
 	}
 
-	r.Run()
+	err := r.Run()
+	if err != nil {
+		slog.Error(err.Error(), "error", err)
+	}
 }
 
 func main() {
