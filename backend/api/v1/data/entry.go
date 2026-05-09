@@ -1,7 +1,5 @@
 package data
 
-import "backend/api/v1/structs"
-
 type Bounds struct {
 	North float64 `json:"north"`
 	South float64 `json:"south"`
@@ -26,10 +24,10 @@ type Tag struct {
 }
 
 type EditEntryRequest struct {
-	NewTitle   string        `json:"newTitle"`
-	NewContent string        `json:"newContent"`
-	NewTags    []structs.Tag `json:"newTags"`
-	EntryID    int           `json:"entryId"`
+	NewTitle   string `json:"newTitle"`
+	NewContent string `json:"newContent"`
+	NewTags    []Tag  `json:"newTags"`
+	EntryID    int    `json:"entryId"`
 }
 
 type VoteRequest struct {
@@ -44,12 +42,12 @@ type VoteResponse struct {
 }
 
 type CreateEntryRequest struct {
-	Title       string        `json:"title" binding:"required"`
-	Location    string        `json:"location" binding:"required"`
-	Latitude    float64       `json:"latitude" binding:"required"`
-	Longitude   float64       `json:"longitude" binding:"required"`
-	Tags        []structs.Tag `json:"tags" binding:"required"`
-	Description string        `json:"description" binding:"required"`
+	Title       string  `json:"title" binding:"required"`
+	Location    string  `json:"location" binding:"required"`
+	Latitude    float64 `json:"latitude" binding:"required"`
+	Longitude   float64 `json:"longitude" binding:"required"`
+	Tags        []Tag   `json:"tags" binding:"required"`
+	Description string  `json:"description" binding:"required"`
 }
 
 type Entry struct {

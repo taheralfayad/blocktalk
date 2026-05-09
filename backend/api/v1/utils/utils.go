@@ -10,7 +10,6 @@ import (
 	"time"
 
 	data "backend/api/v1/data"
-	structs "backend/api/v1/structs"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -76,7 +75,7 @@ func VerifyTokenAndReturnUsername(token string) (string, error) {
 	return ParseTokenAndReturnUsername(token)
 }
 
-func InsertTagAndEntryRevisionAssociation(tx *sql.Tx, entryRevisionId int, tags []structs.Tag) error {
+func InsertTagAndEntryRevisionAssociation(tx *sql.Tx, entryRevisionId int, tags []data.Tag) error {
 	for _, tag := range tags {
 		var tagID int
 		err := tx.QueryRow(`
