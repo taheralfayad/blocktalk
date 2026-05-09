@@ -43,16 +43,6 @@
           return;
         }
 
-        if (
-          verificationChoice === "phoneNumber" &&
-          !/^\+[1-9]\d{1,14}$/.test(phoneNumber)
-        ) {
-          errorMessage =
-            "Phone number must be in E.164 format (e.g. +12345678910)";
-          isLoading = false;
-          return;
-        }
-
         data = {
           username,
           first_name: firstName,

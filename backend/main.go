@@ -4,18 +4,23 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/lib/pq"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 
 	entry "backend/api/v1/entry"
 	messages "backend/api/v1/messages"
 	users "backend/api/v1/users"
 	utils "backend/api/v1/utils"
+
+	data "backend/api/v1/data"
 )
 
 var db *sql.DB
@@ -58,6 +63,18 @@ func AuthMiddleware(db *sql.DB) gin.HandlerFunc {
 func handleRequests() {
 	r := gin.Default()
 
+	validate := validator.New()
+	validate.RegisterValidation("username_requirements", data.ValidateUsername)
+	validate.RegisterValidation("password_requirements", data.ValidatePassword)
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("username_requirements", data.ValidateUsername)
+	}
+
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("password_requirements", data.ValidatePassword)
+	}
+
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -94,24 +111,12 @@ func handleRequests() {
 		entry.RetrieveCity(c, db)
 	})
 
-	entryRoutes.GET("/feed", func(c *gin.Context) {
-		entry.RetrieveFeed(c, db)
-	})
-
 	entryPrivilegedRoutes.POST("/create-entry", RequestLogger(db, "EntryController", "CreateEntry"), func(c *gin.Context) {
 		entry.CreateEntry(c, db)
 	})
 
 	entryPrivilegedRoutes.GET("/autocomplete-address", func(c *gin.Context) {
 		entry.AutocompleteAddress(c, db)
-	})
-
-	entryPrivilegedRoutes.POST("/vote-entry", func(c *gin.Context) {
-		entry.VoteEntry(c, db)
-	})
-
-	entryPrivilegedRoutes.POST("/edit-entry", func(c *gin.Context) {
-		entry.EditEntry(c, db)
 	})
 
 	if os.Getenv("GIN_ENV") == "production" {
@@ -125,7 +130,10 @@ func handleRequests() {
 		r.Use(gin.Recovery())
 	}
 
-	r.Run()
+	err := r.Run()
+	if err != nil {
+		slog.Error(err.Error(), "error", err)
+	}
 }
 
 func main() {
