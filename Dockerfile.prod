@@ -12,7 +12,7 @@ COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY ./backend .
 COPY --from=frontend-builder /app/dist frontend
-COPY backend/static/us_cities.json us_cities.json
+COPY backend/static/cities.json cities.json
 RUN go build -o create_user scripts/create_user.go
 RUN CGO_ENABLED=0 GOOS=linux go build -o server .
 
@@ -22,7 +22,7 @@ WORKDIR /app
 COPY --from=builder /app/server server
 COPY --from=builder /app/create_user scripts/create_user
 COPY --from=builder /app/frontend/ ./assets
-COPY --from=builder /app/us_cities.json ./assets/us_cities.json
+COPY --from=builder /app/cities.json ./assets/cities.json
 EXPOSE 8080
 CMD ["./server"]
 
