@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS request_log (
+CREATE TABLE IF NOT EXISTS public.request_log (
   id SERIAL PRIMARY KEY,
   created_at TIMESTAMP DEFAULT now(),
   url TEXT NOT NULL,
@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS request_log (
   action VARCHAR(30) NOT NULL
 );
 
-CREATE INDEX ON request_log (ip_address);
-CREATE INDEX ON request_log (created_at);
-CREATE INDEX ON request_log (controller);
+CREATE INDEX ON public.request_log (ip_address);
+CREATE INDEX ON public.request_log (created_at);
+CREATE INDEX ON public.request_log (controller);
