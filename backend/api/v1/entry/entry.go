@@ -82,7 +82,7 @@ func AutocompleteAddress(c *gin.Context, db *sql.DB) {
 }
 
 func CreateEntry(c *gin.Context, db *sql.DB) {
-	var payload data.CreateEntryRequest
+	var payload data.Entry
 
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		slog.Error(err.Error(), "error", err)
@@ -108,11 +108,11 @@ func CreateEntry(c *gin.Context, db *sql.DB) {
 
 	if entryAlreadyExists {
 		slog.Info("Entry already exists",
-			"address", payload.Location,
+			"address", payload.Address,
 			"longitude", payload.Longitude,
 			"latitude", payload.Latitude,
 		)
-		messages.StatusConflict(c, errors.New(fmt.Sprintf("Entry at %s already exists", payload.Location)))
+		messages.StatusConflict(c, errors.New(fmt.Sprintf("Entry at %s already exists", payload.Address)))
 		return
 	}
 
@@ -167,7 +167,7 @@ func CreateEntry(c *gin.Context, db *sql.DB) {
 				(SELECT revision_number FROM revision_number),
 				(SELECT id FROM user_cte)
 		RETURNING id
-		`, payload.Title, payload.Location, username, payload.Longitude, payload.Latitude, payload.Description).Scan(&entryRevisionId)
+		`, payload.Title, payload.Address, username, payload.Longitude, payload.Latitude, payload.Content).Scan(&entryRevisionId)
 	if err != nil {
 		slog.Error(err.Error(), "error", err)
 		messages.InternalServerError(c, errors.New("Something went wrong"))
@@ -183,11 +183,11 @@ func CreateEntry(c *gin.Context, db *sql.DB) {
 		},
 		{
 			Name:  "Location",
-			Value: payload.Location,
+			Value: payload.Address,
 		},
 		{
 			Name:  "Description",
-			Value: payload.Description,
+			Value: payload.Content,
 		},
 		{
 			Name:  "Submitted By:",
@@ -366,4 +366,176 @@ func RetrieveCity(c *gin.Context, db *sql.DB) {
 	}
 
 	c.JSON(http.StatusOK, results)
+}
+
+func RetrieveEntry(c *gin.Context, db *sql.DB) {
+	var payload data.Entry
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		slog.Error(err.Error(), "error", err)
+		messages.InternalServerError(c, errors.New("Something went wrong"))
+		return
+	}
+
+	var revisionId int;
+
+	err := db.QueryRow(
+		`
+			SELECT entry.id,
+				   address,
+				   er.content,
+				   views,
+				   date_created,
+				   er.title,
+				   ST_X(location::geometry) AS longitude,
+				   ST_Y(location::geometry) AS latitude,
+				   er.id as entry_revision_id
+			FROM entry
+			JOIN (
+				SELECT DISTINCT ON (entry_id) id, entry_id, title, content, revision_number
+				FROM entry_revision
+				ORDER BY entry_id, revision_number DESC
+			) er ON entry.id = er.entry_id
+			WHERE entry.id = $1
+		`, payload.ID,
+	).Scan(
+		&payload.ID,
+		&payload.Address,
+		&payload.Content,
+		&payload.Views,
+		&payload.DateCreated,
+		&payload.Title,
+		&payload.Longitude,
+		&payload.Latitude,
+		&revisionId,
+	)
+
+	if err != nil {
+		slog.Error(err.Error(), "error", err)
+		messages.InternalServerError(c, errors.New("Something went wrong"))
+		return
+	}
+
+	tagRows, err := db.Query(`
+		WITH tag_ids AS (
+			SELECT 
+				tag_id
+			FROM tags_entry_revision
+			WHERE entry_revision_id = $1
+		)
+		SELECT
+			name,
+			classification
+		FROM tags
+		WHERE id in (SELECT tag_id from tag_ids)
+	`, revisionId)
+	defer tagRows.Close()
+
+	if err != nil {
+		slog.Error(err.Error(), "error", err)
+		messages.InternalServerError(c, errors.New("Something went wrong"))
+		return
+	}
+
+	for tagRows.Next() {
+		var tag data.Tag
+		tagRows.Scan(&tag.Name, &tag.Classification)
+		payload.Tags = append(payload.Tags, tag)
+	}
+
+	c.JSON(http.StatusOK, payload)
+}
+
+func EditEntry(c *gin.Context, db *sql.DB) {
+	cookie, err := c.Cookie("access_token")
+
+	if err != nil {
+		slog.Info(err.Error(), "error", err)
+		messages.StatusUnauthorized(c, errors.New("User is unauthorized, please log in again."))
+		return
+	}
+	
+	var payload data.Entry
+	username, err := utils.ParseTokenAndReturnUsername(cookie)
+
+	if err != nil {
+		slog.Info(err.Error(), "error", err)
+		messages.StatusUnauthorized(c, errors.New("User is unauthorized, please log in again."))
+		return
+	}
+
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		messages.InternalServerError(c, err)
+		return
+	}
+
+	var tagNames []string
+	var tagClassifications []string
+
+	for _, tag := range payload.Tags {
+		tagNames = append(tagNames, tag.Name)
+		tagClassifications = append(tagClassifications, tag.Classification)
+	}
+
+	query := `
+		WITH creator AS (
+			SELECT
+				id
+			FROM users
+			WHERE username = $1
+		),
+		insert_entry_revision AS (
+			INSERT INTO entry_revision
+			(
+				entry_id,
+				creator_id,
+				content,
+				revision_number,
+				title
+			)
+			VALUES (
+				$2,
+				(SELECT id FROM creator),
+				$3,
+				(SELECT MAX(revision_number) + 1 FROM entry_revision WHERE entry_id = $2),
+				$4
+			)
+			RETURNING id
+		),
+		insert_tags AS (
+			INSERT INTO tags
+			(
+				name,
+				classification
+			)
+			SELECT *
+			FROM UNNEST($5::text[], $6::text[])
+			ON CONFLICT (name) DO UPDATE
+			SET classification = EXCLUDED.classification
+			RETURNING id
+		),
+		combine_tag_entry_revision AS (
+			SELECT
+				insert_entry_revision.id as entry_revision_id,
+				insert_tags.id as tag_id
+			FROM insert_entry_revision
+			CROSS JOIN insert_tags
+		)
+		INSERT INTO tags_entry_revision
+		(entry_revision_id, tag_id)
+		SELECT
+			entry_revision_id,
+			tag_id
+		FROM combine_tag_entry_revision
+	`
+
+	_, err = db.Exec(query, username, payload.ID, payload.Content, payload.Title, pq.Array(tagNames), pq.Array(tagClassifications))
+
+	if err != nil {
+		slog.Error(err.Error(), "error", err)
+		messages.InternalServerError(c, errors.New("Something went wrong"))
+		return
+	}
+	
+	messages.StatusCreated(c, "Entry edited!")
 }

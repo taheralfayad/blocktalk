@@ -1,5 +1,6 @@
 <script>
   import { onMount } from "svelte";
+  import { LoaderCircle } from "@lucide/svelte";
 
   import Retvrn from "$lib/components/retvrn.svelte";
   import Input from "$lib/components/input.svelte";
@@ -11,18 +12,20 @@
   import { api } from "$lib/utils/api.svelte";
   import { page } from "$app/state";
 
+  let id = $state(parseInt(page.url.searchParams.get("id") || ""));
   let title = $state("");
-  let location = $state("");
+  let address = $state("");
   let latitude = $state(parseFloat(page.url.searchParams.get("lat")) || "");
   let longitude = $state(parseFloat(page.url.searchParams.get("lng")) || "");
   let zoningTag = $state("");
   let progressTag = $state("");
-  let description = $state("");
+  let content = $state("");
   let error = $state("");
   let success = $state(false);
   let submitting = $state(false);
   let suggestions = $state([]);
   let isFocused = $state(false);
+  let editMode = $state(page.url.searchParams.get("edit_mode") === "true" || "");
 
   const suggestionsHidden = $derived(!isFocused);
 
@@ -31,20 +34,37 @@
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`,
     );
     const data = await res.json();
-    let address = data.display_name || `${lat}, ${lon}`;
-    location = address;
+    address = data.display_name || `${lat}, ${lon}`;
   };
 
-  onMount(() => {
+  onMount(async () => {
     if (latitude && longitude) {
       reverseGeocode(latitude, longitude);
     }
+	if (editMode) {
+		try {
+			let entry = await api.post(
+				"/entries/retrieve-entry",
+				{"id": id}
+			);
+			title = entry.title;
+			address = entry.address;
+			latitude = entry.latitude;
+			longitude = entry.longitude;
+			content = entry.content;
+			zoningTag = entry.tags.find((t) => t.classification === "Zoning")?.name;
+			progressTag = entry.tags.find((t) => t.classification === "Progress")?.name;
+			console.log(zoningTag, progressTag);
+		} catch (err) {
+			console.error(err);
+		}
+	}
   });
 
   let handleLocationAutosuggestion = async (event) => {
-    if (location.length > 3) {
+    if (address.length > 3) {
       const data = await api.get(
-        `/entries/autocomplete-address?query=${location}`,
+        `/entries/autocomplete-address?query=${address}`,
       );
 
       suggestions = data;
@@ -58,7 +78,7 @@
       (suggestion) => suggestion.address == suggestionName,
     );
 
-    location = suggestionObject.address;
+    address = suggestionObject.address;
     longitude = suggestionObject.lon;
     latitude = suggestionObject.lat;
     suggestions = [];
@@ -97,19 +117,24 @@
 
     const data = {
       title,
-      location,
+      address,
       longitude: longitude || -81.3792,
       latitude: latitude || 28.5383,
       tags: [
         { name: zoningTag, classification: "Zoning" },
         { name: progressTag, classification: "Progress" },
       ],
-      description,
+      content: content,
     };
 
     try {
-      const response = await api.post(`/entries/create-entry`, data);
-      success = true;
+	  if (editMode) {
+          data["id"] = id;
+          const response = await api.post(`/entries/edit-entry`, data);
+	  } else {
+          const response = await api.post(`/entries/create-entry`, data);
+      }
+	  success = true;
     } catch (e) {
       console.error("Submit error:", e);
       if (!error) error = e.message || "An unknown error occurred";
@@ -117,6 +142,7 @@
       submitting = false;
     }
   };
+
 </script>
 
 <div class="flex flex-col max-h-screen overflow-y-auto">
@@ -125,7 +151,15 @@
   <div class="mb-48">
     <div class="text-center mb-4">
       <h1 class="text-2xl font-semibold">
-        Add an entry — help your neighbor know what's up
+        {#if editMode}
+		Edit
+		{:else}
+		Add
+		{/if}
+
+		an entry — 
+		
+		help your neighbor know what's up
       </h1>
     </div>
     <div
@@ -136,7 +170,7 @@
         class="rounded-2xl border border-slate-100 bg-white p-6 shadow-lg sm:p-8"
       >
         <p class="mb-4 text-sm">
-          Share a short title, location and details. Fields marked with <span
+          Share a short title, address and details. Fields marked with <span
             class="font-medium">*</span
           > are required.
         </p>
@@ -153,9 +187,10 @@
           />
         </div>
 
+		{#if !editMode}
         <div class="sm:col-span-2">
           <label
-            for="location"
+            for="address"
             class="mb-1 block text-sm font-medium text-slate-700"
           >
             Location *
@@ -166,7 +201,7 @@
               suggestions={suggestions.map((suggestion) => suggestion.address)}
               handleInput={handleLocationAutosuggestion}
               selectSuggestion={handleSelectSuggestion}
-              bind:searchValue={location}
+              bind:searchValue={address}
               onClickOutside={() => (isFocused = false)}
               onFocus={() => (isFocused = true)}
             />
@@ -176,11 +211,12 @@
             text="Get Current Location"
           />
         </div>
+		{/if}
 
         <div class="sm:col-span-2">
           <Input
-            bind:value={description}
-            id="description"
+            bind:value={content}
+            id="content"
             label="Description"
             placeholder="Add context, ETA, or contact info..."
             rows={4}
@@ -237,27 +273,7 @@
               disabled={submitting}
             >
               {#if submitting}
-                <svg
-                  class="h-4 w-4 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden
-                >
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="4"
-                    class="opacity-25"
-                  ></circle>
-                  <path
-                    d="M4 12a8 8 0 018-8"
-                    stroke="currentColor"
-                    stroke-width="4"
-                    class="opacity-75"
-                  ></path>
-                </svg>
+			  	<LoaderCircle class="h-4 w-4 animate-spin"/>
                 Saving...
               {:else}
                 Submit
@@ -268,13 +284,17 @@
               type="button"
               class="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:cursor-pointer hover:bg-slate-50"
               onclick={() => {
+			  	id = "";
                 title = "";
-                location = "";
-                description = "";
+                address = "";
+				lattitude = "";
+				longitude = "";
+                content = "";
                 progressTag = "";
                 zoningTag = "";
                 error = "";
                 success = false;
+				editMode = false;
               }}
             >
               Reset

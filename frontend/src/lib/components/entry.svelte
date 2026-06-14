@@ -1,6 +1,9 @@
 <script>
+	import { Pencil } from "@lucide/svelte";
+
 	import { tick } from 'svelte';
-	let { title, address, content, zoningTag, progressTag, highlighted } = $props();
+
+	let { id, title, address, content, zoningTag, progressTag, highlighted } = $props();
 
 	let cardEl = $state();
 
@@ -26,12 +29,17 @@
 	class:shadow-lg={highlighted}
 >
 	<div class="flex flex-col gap-1">
-		<h1
-			class="line-clamp-2 text-sm leading-snug font-semibold
-             text-gray-900"
-		>
-			{title}
-		</h1>
+		<div class="flex flex-row justify-between items-center h-full grow">
+			<h1
+				class="line-clamp-2 text-sm leading-snug font-semibold
+				 text-gray-900"
+			>
+				{title}
+			</h1>
+			<a href="/create-entry?id={id}&edit_mode=true" class="hover:cursor-pointer rounded-full p-1">
+				<Pencil width={2} height={2}/>
+			</a>
+		</div>
 
 		<h2 class="text-xs text-gray-800">
 			{address}

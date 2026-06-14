@@ -63,6 +63,7 @@
         {#if feed.length > 0}
           {#each feed as item}
             <Entry
+              id={item.id}
               title={item.title}
               address={item.address}
               content={item.content}

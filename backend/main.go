@@ -119,6 +119,14 @@ func handleRequests() {
 		entry.AutocompleteAddress(c, db)
 	})
 
+	entryPrivilegedRoutes.POST("/retrieve-entry", func(c *gin.Context) {
+		entry.RetrieveEntry(c, db)
+	})
+
+	entryPrivilegedRoutes.POST("/edit-entry", func(c *gin.Context) {
+		entry.EditEntry(c, db)
+	})
+
 	if os.Getenv("GIN_ENV") == "production" {
 		r.Static("/assets", "/app/assets")
 		r.Static("/login", "/app/assets")
