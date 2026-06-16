@@ -56,5 +56,6 @@ type LoginRequest struct {
 }
 
 type Me struct {
-	IsVerified bool `json:"is_verified"`
+	IsVerified bool   `json:"is_verified"`
+	Username   string `json:"username"` 
 }

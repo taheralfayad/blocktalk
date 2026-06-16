@@ -3,7 +3,17 @@
 
 	import { tick } from 'svelte';
 
-	let { id, title, address, content, zoningTag, progressTag, highlighted } = $props();
+	let {
+		id,
+		title,
+		address,
+		content,
+		zoningTag,
+		progressTag,
+		highlighted,
+		entryUsername,
+		currentUsername,
+	} = $props();
 
 	let cardEl = $state();
 
@@ -36,9 +46,11 @@
 			>
 				{title}
 			</h1>
-			<a href="/create-entry?id={id}&edit_mode=true" class="hover:cursor-pointer rounded-full p-1">
-				<Pencil width={2} height={2}/>
-			</a>
+			{#if entryUsername === currentUsername}
+				<a href="/create-entry?id={id}&edit_mode=true" class="hover:cursor-pointer rounded-full p-1">
+					<Pencil width={2} height={2}/>
+				</a>
+			{/if}
 		</div>
 
 		<h2 class="text-xs text-gray-800">

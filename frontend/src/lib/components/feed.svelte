@@ -20,7 +20,8 @@
   } from "$lib/states/feed.svelte.js";
 
   let feedShown = $derived(getFeedShown());
-  let feed: any[] = $state([]);
+  let feed = $state([]);
+  let loggedInData = $state({});
 
   const closeMenu = () => {
     const clearedFeed = getFeed().map((item) => ({
@@ -31,14 +32,13 @@
     setFeed(clearedFeed);
     setFeedShown(false);
   };
-  let loggedIn = $state(false);
-  let verified = $state(false);
 
   const getIsLoggedIn = async () => {
     try {
-      const loggedInData = await isLoggedIn();
-      loggedIn = loggedInData.userIsLoggedIn;
-      verified = loggedInData.userIsVerified;
+      const response = await isLoggedIn();
+      loggedInData.loggedIn = response.userIsLoggedIn;
+      loggedInData.verified = response.userIsVerified;
+      loggedInData.username = response.username;
     } catch (error) {
       return false;
     }
@@ -64,6 +64,8 @@
           {#each feed as item}
             <Entry
               id={item.id}
+              entryUsername={item.username}
+              currentUsername={loggedInData.username}
               title={item.title}
               address={item.address}
               content={item.content}
@@ -86,14 +88,14 @@
       </div>
 
       <div class="border-t border-gray-200">
-        {#if loggedIn && verified}
+        {#if loggedInData.loggedIn && loggedInData.verified}
           <a
             href="/create-entry"
             class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
           >
             Participate
           </a>
-        {:else if loggedIn && !verified}
+        {:else if loggedInData.loggedIn && !loggedInData.verified}
           <a
             href="/verification-page"
             class="block w-full px-4 py-3 text-left transition-colors hover:bg-gray-50"
