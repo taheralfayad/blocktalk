@@ -389,13 +389,15 @@ func RetrieveEntry(c *gin.Context, db *sql.DB) {
 				   er.title,
 				   ST_X(location::geometry) AS longitude,
 				   ST_Y(location::geometry) AS latitude,
-				   er.id as entry_revision_id
+				   er.id as entry_revision_id,
+				   u.username
 			FROM entry
 			JOIN (
 				SELECT DISTINCT ON (entry_id) id, entry_id, title, content, revision_number
 				FROM entry_revision
 				ORDER BY entry_id, revision_number DESC
 			) er ON entry.id = er.entry_id
+			JOIN users u on u.id = entry.creator_id
 			WHERE entry.id = $1
 		`, payload.ID,
 	).Scan(
@@ -408,6 +410,7 @@ func RetrieveEntry(c *gin.Context, db *sql.DB) {
 		&payload.Longitude,
 		&payload.Latitude,
 		&revisionId,
+		&payload.Username,
 	)
 
 	if err != nil {

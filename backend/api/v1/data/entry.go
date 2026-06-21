@@ -23,17 +23,6 @@ type Tag struct {
 	Classification string `json:"classification"`
 }
 
-type VoteRequest struct {
-	EntryID         string `json:"entry_id" binding:"required"`
-	InteractionType string `json:"interaction_type" binding:"required"`
-}
-
-type VoteResponse struct {
-	Upvotes         int    `json:"upvotes"`
-	Downvotes       int    `json:"downvotes"`
-	UserInteraction string `json:"user_interaction"`
-}
-
 type Entry struct {
 	ID               int       `json:"id"`
 	Title            string    `json:"title"`

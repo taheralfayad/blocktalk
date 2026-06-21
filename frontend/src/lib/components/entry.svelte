@@ -1,7 +1,8 @@
 <script>
 	import { Pencil } from "@lucide/svelte";
 
-	import { tick } from 'svelte';
+	import { tick } from "svelte";
+	import { goto } from "$app/navigation";
 
 	let {
 		id,
@@ -21,8 +22,8 @@
 		if (highlighted) {
 			tick().then(() => {
 				cardEl?.scrollIntoView({
-					behavior: 'smooth',
-					block: 'center'
+					behavior: "smooth",
+					block: "center",
 				});
 			});
 		}
@@ -47,9 +48,14 @@
 				{title}
 			</h1>
 			{#if entryUsername === currentUsername}
-				<a href="/create-entry?id={id}&edit_mode=true" class="hover:cursor-pointer rounded-full p-1">
-					<Pencil width={2} height={2}/>
-				</a>
+				<button
+					onclick={() => {
+						goto(`/create-entry?id=${id}&edit_mode=true`);
+					}}
+					class="hover:cursor-pointer rounded-full p-1"
+				>
+					<Pencil width={2} height={2} />
+				</button>
 			{/if}
 		</div>
 
