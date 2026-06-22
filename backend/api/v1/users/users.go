@@ -265,6 +265,7 @@ func Me(c *gin.Context, db *sql.DB) {
 	}
 
 	me.IsVerified = verified
+	me.Username = username
 
 	c.JSON(http.StatusOK, me)
 }

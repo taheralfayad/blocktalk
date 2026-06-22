@@ -11,7 +11,8 @@ export const isLoggedIn = async () => {
 
     return {
       userIsLoggedIn: true,
-      userIsVerified: !!(data && data.is_verified)
+      userIsVerified: !!(data && data.is_verified),
+      username: data.username
     }
   } catch (error) {
     return {
